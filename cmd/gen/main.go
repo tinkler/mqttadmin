@@ -30,8 +30,76 @@ func init() {
 	flag.Parse()
 }
 
+// generate all files when start
+func beforeWatch() (cache map[string]*parser.Package, err error) {
+	cache = make(map[string]*parser.Package)
+	// traverse dir
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, e error) error {
+		if e != nil {
+			return e
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		if dir == path {
+			return nil
+		}
+		pkg, err := parser.ParsePackage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cache[pkg.Name] = pkg
+		switch typ {
+		case "ts":
+			err = parser.GenerateTSCode("../../", pkg, nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+		case "dart":
+			err = parser.GenerateDartCode("../../", pkg)
+			if err != nil {
+				log.Fatal(err)
+			}
+		case "swift":
+			err = parser.GenerateSwiftCode("../../", pkg)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return
+	}
+	for _, pkg := range cache {
+		switch typ {
+		case "ts":
+			err = parser.GenerateTSCode("../../", pkg, cache)
+			if err != nil {
+				log.Fatal(err)
+			}
+		case "dart":
+			err = parser.GenerateDartCode("../../", pkg)
+			if err != nil {
+				log.Fatal(err)
+			}
+		case "swift":
+			err = parser.GenerateSwiftCode("../../", pkg)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+	return
+}
+
 func main() {
-	quit := make(chan os.Signal)
+	pkgs, err := beforeWatch()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -59,7 +127,7 @@ func main() {
 					switch typ {
 					case "ts":
 						// TODO: cache other package
-						err = parser.GenerateTSCode("../../", pkg, nil)
+						err = parser.GenerateTSCode("../../", pkg, pkgs)
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -99,6 +167,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	<-quit
 	fmt.Println("退出")
 	done <- true

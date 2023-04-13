@@ -8,6 +8,8 @@ export interface Role {
 	name: string;
 	
 	
+	saveRole(): Promise<void>;
+	
 }
 
 
@@ -24,6 +26,13 @@ export function Role(): Role {
 		name: "",
 		
 
+		
+
+		saveRole(): Promise<void> {
+			
+			return postRole(this, 'save-role', {});
+			
+		},
 		
 		
 	};

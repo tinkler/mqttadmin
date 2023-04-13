@@ -2,18 +2,17 @@ package user
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/tinkler/mqttadmin/pkg/db"
 	"github.com/tinkler/mqttadmin/pkg/model/role"
+	"google.golang.org/grpc/status"
 )
 
 type User struct {
-	Ctx     context.Context `json:"-"`
-	ID      int64
-	Name    string
-	Email   string
-	Age     int
-	Profile *UserProfile `json:",omitempty"`
+	ID       int64
+	Username string
+	Email    string
+	Profile  *UserProfile `json:",omitempty"`
 }
 
 func NewUser() *User {
@@ -25,11 +24,12 @@ func (u *User) TableName() string {
 }
 
 func (u *User) Save(ctx context.Context) error {
-	u.ID = 10
-	return nil
+	return db.GetDB(ctx).Save(u).Error
 }
 
 func (u *User) AddRole(ctx context.Context, role *role.Role) error {
-	fmt.Println(role)
+	if role == nil || role.ID == 0 {
+		return status.New(400, "role is nil or role id is 0").Err()
+	}
 	return nil
 }

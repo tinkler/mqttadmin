@@ -12,6 +12,66 @@ import (
 func RoutesUser(m *chi.Mux) {
 	m.Route("/user", func(r chi.Router) {
 		
+		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.UserProfile, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[struct{}]{}
+			
+			err = m.Data.Save(r.Context())
+			
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			byt, _ := sjson.Marshal(res)
+			_, _ = w.Write(byt)
+
+		})
+		r.Post("/user_role/save", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.UserRole, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[struct{}]{}
+			
+			err = m.Data.Save(r.Context())
+			
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			byt, _ := sjson.Marshal(res)
+			_, _ = w.Write(byt)
+
+		})
+		r.Post("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.Auth, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.User]{}
+			
+			res.Data, err = m.Data.Login(r.Context())
+			
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			byt, _ := sjson.Marshal(res)
+			_, _ = w.Write(byt)
+
+		})
 		r.Post("/user/save", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*user.User, any]{}
 			err := sjson.Bind(r, &m)
@@ -42,46 +102,6 @@ func RoutesUser(m *chi.Mux) {
 			res := Res[struct{}]{}
 			
 			err = m.Data.AddRole(r.Context(), m.Args.Role, )
-			
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			byt, _ := sjson.Marshal(res)
-			_, _ = w.Write(byt)
-
-		})
-		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.UserProfile, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[struct{}]{}
-			
-			err = m.Data.Save(r.Context())
-			
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			byt, _ := sjson.Marshal(res)
-			_, _ = w.Write(byt)
-
-		})
-		r.Post("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.Auth, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.User]{}
-			
-			res.Data, err = m.Data.Login(r.Context())
 			
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -17,11 +17,9 @@ export interface User {
 	
 	id: number;
 	
-	name: string;
+	username: string;
 	
 	email: string;
-	
-	age: number;
 	
 	profile: UserProfile;
 	
@@ -35,6 +33,19 @@ export interface User {
 export interface UserProfile {
 	
 	phoneNo: string;
+	
+	
+	save(): Promise<void>;
+	
+}
+
+export interface UserRole {
+	
+	id: number;
+	
+	user: User;
+	
+	role: Role;
 	
 	
 	save(): Promise<void>;
@@ -98,13 +109,10 @@ export function User(): User {
 		id: 0,
 		
 
-		name: "",
+		username: "",
 		
 
 		email: "",
-		
-
-		age: 0,
 		
 
 		profile: UserProfile(),
@@ -191,6 +199,55 @@ function postUserProfile(userProfile: UserProfile, method: string, arg: {}): Pro
 			reject(new Error(xhr.statusText));
 		};
 		xhr.send(JSON.stringify({ data: userProfile, arg: arg }));
+	});
+}
+
+export function UserRole(): UserRole {
+	
+	return {
+		
+		
+
+		id: 0,
+		
+
+		user: User(),
+		
+
+		role: Role(),
+		
+
+		
+
+		save(): Promise<void> {
+			
+			return postUserRole(this, 'save', {});
+			
+		},
+		
+		
+	};
+	
+}
+
+// post data by restful api
+
+function postUserRole(userRole: UserRole, method: string, arg: {}): Promise<any> {
+	const xhr = new XMLHttpRequest();
+	xhr.open("POST", `/user/user_role/${method}`, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	return new Promise((resolve, reject) => {
+		xhr.onload = () => {
+			if (xhr.status === 200) {
+				resolve(xhr.response);
+			} else {
+				reject(new Error(xhr.statusText));
+			}
+		};
+		xhr.onerror = () => {
+			reject(new Error(xhr.statusText));
+		};
+		xhr.send(JSON.stringify({ data: userRole, arg: arg }));
 	});
 }
 

@@ -273,11 +273,14 @@ func GenerateTSCode(path string, pkg *Package, dep map[string]*Package) error {
 					return s.Name + "()"
 				}
 				if dep != nil {
-					if pkg, isDep := dep[strings.Split(s, ".")[0]]; isDep {
-						if s := FindStruct(pkg, s); s != nil {
-							return s.Name + "()"
+					if sli := strings.Split(s, "."); len(sli) > 1 {
+						if pkg, isDep := dep[sli[0]]; isDep {
+							if s := FindStruct(pkg, sli[1]); s != nil {
+								return s.Name + "()"
+							}
 						}
 					}
+
 				}
 				return ""
 			},

@@ -66,7 +66,10 @@ func toField(t ast.Expr) (f *Field) {
 }
 
 func ParsePackage(path string) (*Package, error) {
-	pkg := &Package{}
+	var (
+		pkg        = &Package{}
+		pkgImports = map[string]bool{}
+	)
 	fset := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fset, path, nil, parser.ParseComments)
 	if err != nil {
@@ -75,6 +78,7 @@ func ParsePackage(path string) (*Package, error) {
 	cp, _ := os.Getwd()
 
 	path = filepath.Join(cp, path)
+	path = path[:strings.LastIndex(path, "/")]
 	for _, p := range pkgs {
 		pkg.Name = p.Name
 		for _, f := range p.Files {
@@ -82,9 +86,13 @@ func ParsePackage(path string) (*Package, error) {
 				switch x := n.(type) {
 				case *ast.ImportSpec:
 					impPath := strings.Trim(x.Path.Value, "\"")
-					if sli := strings.Split(impPath, "/"); len(sli) > 1 {
-						if strings.Contains(path, strings.Join(sli[:len(sli)-2], "/")) {
-							pkg.Imports = append(pkg.Imports, sli[len(sli)-1])
+					if impLi := strings.LastIndex(impPath, "/"); impLi > 0 {
+						if strings.HasSuffix(path, impPath[:impLi]) {
+							importName := impPath[impLi+1:]
+							if !pkgImports[impPath] {
+								pkgImports[impPath] = true
+								pkg.Imports = append(pkg.Imports, importName)
+							}
 						}
 					}
 				case *ast.GenDecl:
