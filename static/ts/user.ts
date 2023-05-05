@@ -13,19 +13,31 @@ export interface Auth {
 	
 }
 
+/**
+* User is the user model
+*/
 export interface User {
 	
+	/**
+	* ID is the primary key
+	*/
 	id: number;
 	
 	username: string;
 	
 	email: string;
 	
-	profile: UserProfile;
+	profiles: UserProfile[];
 	
 	
+	/**
+	* Save saves the user to the database
+	*/
 	save(): Promise<void>;
 	
+	/**
+	* AddRole adds a role to the user
+	*/
 	addRole(role: Role, ): Promise<void>;
 	
 }
@@ -70,7 +82,7 @@ export function Auth(): Auth {
 
 		login(): Promise<User>  {
 			
-			return postAuth(this, 'login', {}).then((res: { data: any }) => res.data as User);
+			return postAuth(this, 'login', {  }).then((res: { data: any }) => res.data as User);
 			
 		},
 		
@@ -81,7 +93,7 @@ export function Auth(): Auth {
 
 // post data by restful api
 
-function postAuth(auth: Auth, method: string, arg: {}): Promise<any> {
+function postAuth(auth: Auth, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/user/auth/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -96,10 +108,13 @@ function postAuth(auth: Auth, method: string, arg: {}): Promise<any> {
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: auth, arg: arg }));
+		xhr.send(JSON.stringify({ data: auth, args }));
 	});
 }
 
+/**
+* User is the user model
+*/
 export function User(): User {
 	
 	return {
@@ -115,21 +130,21 @@ export function User(): User {
 		email: "",
 		
 
-		profile: UserProfile(),
+		profiles: ,
 		
 
 		
 
 		save(): Promise<void> {
 			
-			return postUser(this, 'save', {});
+			return postUser(this, 'save', {  });
 			
 		},
 		
 
 		addRole(role: Role, ): Promise<void> {
 			
-			return postUser(this, 'add-role', {});
+			return postUser(this, 'add-role', { role,  });
 			
 		},
 		
@@ -140,7 +155,7 @@ export function User(): User {
 
 // post data by restful api
 
-function postUser(user: User, method: string, arg: {}): Promise<any> {
+function postUser(user: User, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/user/user/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -155,7 +170,7 @@ function postUser(user: User, method: string, arg: {}): Promise<any> {
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: user, arg: arg }));
+		xhr.send(JSON.stringify({ data: user, args }));
 	});
 }
 
@@ -172,7 +187,7 @@ export function UserProfile(): UserProfile {
 
 		save(): Promise<void> {
 			
-			return postUserProfile(this, 'save', {});
+			return postUserProfile(this, 'save', {  });
 			
 		},
 		
@@ -183,7 +198,7 @@ export function UserProfile(): UserProfile {
 
 // post data by restful api
 
-function postUserProfile(userProfile: UserProfile, method: string, arg: {}): Promise<any> {
+function postUserProfile(userProfile: UserProfile, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/user/user_profile/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -198,7 +213,7 @@ function postUserProfile(userProfile: UserProfile, method: string, arg: {}): Pro
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: userProfile, arg: arg }));
+		xhr.send(JSON.stringify({ data: userProfile, args }));
 	});
 }
 
@@ -221,7 +236,7 @@ export function UserRole(): UserRole {
 
 		save(): Promise<void> {
 			
-			return postUserRole(this, 'save', {});
+			return postUserRole(this, 'save', {  });
 			
 		},
 		
@@ -232,7 +247,7 @@ export function UserRole(): UserRole {
 
 // post data by restful api
 
-function postUserRole(userRole: UserRole, method: string, arg: {}): Promise<any> {
+function postUserRole(userRole: UserRole, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/user/user_role/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -247,7 +262,7 @@ function postUserRole(userRole: UserRole, method: string, arg: {}): Promise<any>
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: userRole, arg: arg }));
+		xhr.send(JSON.stringify({ data: userRole, args }));
 	});
 }
 

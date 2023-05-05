@@ -13,20 +13,23 @@ import (
 )
 
 type Field struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
+	Comments []string
 }
 
 type Method struct {
-	Name string
-	Args []Field
-	Rets []Field
+	Name     string
+	Comments []string
+	Args     []Field
+	Rets     []Field
 }
 
 type Struct struct {
-	Name    string
-	Fields  []Field
-	Methods []Method
+	Name     string
+	Comments []string
+	Fields   []Field
+	Methods  []Method
 }
 
 type Package struct {
@@ -103,6 +106,7 @@ func ParsePackage(path string) (*Package, error) {
 							case *ast.StructType:
 								s := Struct{}
 								s.Name = t.Name.Name
+
 								for _, f := range st.Fields.List {
 									if len(f.Names) == 0 {
 										continue
@@ -120,13 +124,26 @@ func ParsePackage(path string) (*Package, error) {
 									if field.Name == "" {
 										continue
 									}
+									if f.Comment != nil {
+										for _, c := range f.Comment.List {
+											field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(c.Text, "//")))
+										}
+									}
 									s.Fields = append(s.Fields, *field)
 								}
+
+								if x.Doc != nil {
+									for _, c := range x.Doc.List {
+										s.Comments = append(s.Comments, strings.TrimSpace(strings.TrimPrefix(c.Text, "//")))
+									}
+								}
+
 								pkg.Structs = append(pkg.Structs, s)
 							}
 						}
 					}
 				case *ast.FuncDecl:
+
 					for i, s := range pkg.Structs {
 						if x.Recv == nil {
 							continue
@@ -186,6 +203,11 @@ func ParsePackage(path string) (*Package, error) {
 							}
 							if !foundError {
 								continue
+							}
+							if x.Doc != nil {
+								for _, c := range x.Doc.List {
+									m.Comments = append(m.Comments, strings.TrimSpace(strings.TrimPrefix(c.Text, "//")))
+								}
 							}
 							pkg.Structs[i].Methods = append(pkg.Structs[i].Methods, m)
 						}

@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/tinkler/mqttadmin/pkg/jsonz/sjson"
 	"github.com/tinkler/mqttadmin/pkg/model/role"
+	"github.com/tinkler/mqttadmin/pkg/status"
 )
 
 func RoutesRole(m *chi.Mux) {
@@ -22,13 +23,12 @@ func RoutesRole(m *chi.Mux) {
 			
 			err = m.Data.SaveRole(r.Context())
 			
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			if status.HttpError(w, err) {
 				return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			byt, _ := sjson.Marshal(res)
-			_, _ = w.Write(byt)
+			if sjson.HttpWrite(w, res) {
+				return
+			}
 
 		})
 	})

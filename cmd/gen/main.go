@@ -4,7 +4,6 @@ live code generator
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -14,24 +13,25 @@ import (
 	"syscall"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/tinkler/mqttadmin/internal/gen"
 	"github.com/tinkler/mqttadmin/pkg/parser"
 )
 
-var (
-	// listen dir
-	dir string
-	// listen type
-	typ string
-)
-
-func init() {
-	flag.StringVar(&dir, "dir", "../../pkg/model", "listen dir")
-	flag.StringVar(&typ, "type", "ts", "listen type")
-	flag.Parse()
+// mkdirForOutput
+func mkdirForOutput(dir string, codes []*gen.GenCodeConf) {
+	for _, c := range codes {
+		if c.OutDir == "" {
+			continue
+		}
+		err := os.MkdirAll(c.OutDir, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // generate all files when start
-func beforeWatch() (cache map[string]*parser.Package, err error) {
+func beforeWatch(dir string, codes []*gen.GenCodeConf) (cache map[string]*parser.Package, err error) {
 	cache = make(map[string]*parser.Package)
 	// traverse dir
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, e error) error {
@@ -49,44 +49,34 @@ func beforeWatch() (cache map[string]*parser.Package, err error) {
 			log.Fatal(err)
 		}
 		cache[pkg.Name] = pkg
-		switch typ {
-		case "ts":
-			err = parser.GenerateTSCode("../../", pkg, nil)
-			if err != nil {
-				log.Fatal(err)
-			}
-		case "dart":
-			err = parser.GenerateDartCode("../../", pkg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		case "swift":
-			err = parser.GenerateSwiftCode("../../", pkg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
 		return nil
 	})
 	if err != nil {
 		return
 	}
 	for _, pkg := range cache {
-		switch typ {
-		case "ts":
-			err = parser.GenerateTSCode("../../", pkg, cache)
-			if err != nil {
-				log.Fatal(err)
-			}
-		case "dart":
-			err = parser.GenerateDartCode("../../", pkg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		case "swift":
-			err = parser.GenerateSwiftCode("../../", pkg)
-			if err != nil {
-				log.Fatal(err)
+		for _, c := range codes {
+			switch c.Typ {
+			case "ts":
+				err = parser.GenerateTSCode(c.OutDir, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
+			case "dart":
+				err = parser.GenerateDartCode(c.OutDir, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
+			case "swift":
+				err = parser.GenerateSwiftCode(c.OutDir, pkg)
+				if err != nil {
+					log.Fatal(err)
+				}
+			case "chi_route":
+				err = parser.GenerateChiRoutes(c.OutDir, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
@@ -94,7 +84,10 @@ func beforeWatch() (cache map[string]*parser.Package, err error) {
 }
 
 func main() {
-	pkgs, err := beforeWatch()
+	gen.ParseGenConf()
+	gf := gen.GetGenConf()
+	mkdirForOutput(gf.Dir, gf.Codes)
+	pkgs, err := beforeWatch(gf.Dir, gf.Codes)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,24 +117,31 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					switch typ {
-					case "ts":
-						// TODO: cache other package
-						err = parser.GenerateTSCode("../../", pkg, pkgs)
-						if err != nil {
-							log.Fatal(err)
-						}
-					case "dart":
-						err = parser.GenerateDartCode("../../", pkg)
-						if err != nil {
-							log.Fatal(err)
-						}
-					case "swift":
-						err = parser.GenerateSwiftCode("../../", pkg)
-						if err != nil {
-							log.Fatal(err)
+					for _, c := range gf.Codes {
+						switch c.Typ {
+						case "ts":
+							err = parser.GenerateTSCode(c.OutDir, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "dart":
+							err = parser.GenerateDartCode(c.OutDir, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "swift":
+							err = parser.GenerateSwiftCode(c.OutDir, pkg)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "chi_route":
+							err = parser.GenerateChiRoutes(c.OutDir, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
 						}
 					}
+
 				}
 			case err := <-watcher.Errors:
 				log.Println("error:", err)
@@ -151,7 +151,7 @@ func main() {
 		}
 	}()
 	// traverse dir
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, e error) error {
+	err = filepath.Walk(gf.Dir, func(path string, info os.FileInfo, e error) error {
 		if e != nil {
 			return e
 		}

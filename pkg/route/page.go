@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/tinkler/mqttadmin/pkg/jsonz/sjson"
 	"github.com/tinkler/mqttadmin/pkg/model/page"
+	"github.com/tinkler/mqttadmin/pkg/status"
 	"github.com/tinkler/mqttadmin/pkg/model/user"
 )
 
@@ -23,13 +24,12 @@ func RoutesPage(m *chi.Mux) {
 			
 			res.Data, err = m.Data.FetchUser(r.Context())
 			
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			if status.HttpError(w, err) {
 				return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			byt, _ := sjson.Marshal(res)
-			_, _ = w.Write(byt)
+			if sjson.HttpWrite(w, res) {
+				return
+			}
 
 		})
 	})

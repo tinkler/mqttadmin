@@ -1,0 +1,6 @@
+# dir: "./internal/model"
+# codes:
+#   - typ: chi_route
+#     out_dir: ./internal/route
+#   - typ: ts
+#     out_dir: ./static/ts

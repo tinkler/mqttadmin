@@ -12,8 +12,8 @@ import (
 )
 
 // GenerateRoutes generate routes for package using template.
-func GenerateRoutes(path string, pkg *Package, dep map[string]*Package) error {
-	f, err := os.Create(filepath.Join(path, "pkg", "route", fmt.Sprintf("%s.go", pkg.Name)))
+func GenerateChiRoutes(path string, pkg *Package, dep map[string]*Package) error {
+	f, err := os.Create(filepath.Join(path, fmt.Sprintf("%s.go", pkg.Name)))
 	if err != nil {
 		return err
 	}
@@ -79,12 +79,14 @@ func GenerateRoutes(path string, pkg *Package, dep map[string]*Package) error {
 		if hasMethods {
 			f.WriteString(fmt.Sprintln("\t\"github.com/tinkler/mqttadmin/pkg/jsonz/sjson\""))
 			f.WriteString(fmt.Sprintf("\t\"github.com/tinkler/mqttadmin/pkg/model/%s\"\n", pkg.Name))
+			f.WriteString(fmt.Sprintln("\t\"github.com/tinkler/mqttadmin/pkg/status\""))
 		}
 		for _, importName := range pkg.Imports {
 			if _, used := usedDepStruct[importName]; used {
 				f.WriteString(fmt.Sprintf("\t\"github.com/tinkler/mqttadmin/pkg/model/%s\"\n", importName))
 			}
 		}
+
 		f.WriteString(fmt.Sprintln(")"))
 	}
 
@@ -111,7 +113,7 @@ func GenerateRoutes(path string, pkg *Package, dep map[string]*Package) error {
 			"toMinus": func(s string) string {
 				return strings.ReplaceAll(sjson.ToSnackedName(s), "_", "-")
 			},
-		}).Parse(goTemplate))
+		}).Parse(goChiRouteTemplate))
 		if err := t.Execute(f, pkg); err != nil {
 			return err
 		}
@@ -121,7 +123,7 @@ func GenerateRoutes(path string, pkg *Package, dep map[string]*Package) error {
 }
 
 // go route template
-const goTemplate = `
+const goChiRouteTemplate = `
 func Routes{{.Name | toFulle}}(m *chi.Mux) {
 	m.Route("/{{.Name}}", func(r chi.Router) {
 		{{range .Structs}}{{$struct := .}}{{range .Methods}}
@@ -140,13 +142,12 @@ func Routes{{.Name | toFulle}}(m *chi.Mux) {
 			{{end}}{{else}}{{if ge (len .Rets) 1}}res.Data, err = m.Data.{{.Name}}(r.Context())
 			{{else}}err = m.Data.{{.Name}}(r.Context())
 			{{end}}{{end}}
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+			if status.HttpError(w, err) {
 				return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			byt, _ := sjson.Marshal(res)
-			_, _ = w.Write(byt)
+			if sjson.HttpWrite(w, res) {
+				return
+			}
 
 		}){{end}}{{end}}
 	})
@@ -156,7 +157,7 @@ func Routes{{.Name | toFulle}}(m *chi.Mux) {
 // GenerateTSCode generate ts code
 func GenerateTSCode(path string, pkg *Package, dep map[string]*Package) error {
 
-	f, err := os.Create(filepath.Join(path, "static", "ts", fmt.Sprintf("%s.ts", sjson.ToSnackedName(pkg.Name))))
+	f, err := os.Create(filepath.Join(path, fmt.Sprintf("%s.ts", sjson.ToSnackedName(pkg.Name))))
 	if err != nil {
 		return err
 	}
@@ -298,18 +299,30 @@ func GenerateTSCode(path string, pkg *Package, dep map[string]*Package) error {
 // typescript template
 const tsModelTemplate = `{{$pkgName := .Name}}
 {{range .Structs}}
-export interface {{.Name}} {
+{{range .Comments}}/**
+* {{.}}
+*/
+{{end}}export interface {{.Name}} {
 	{{range .Fields}}
-	{{.Name | toCamel}}: {{.Type | toType}};
+	{{range .Comments}}/**
+	* {{.}}
+	*/
+	{{end}}{{.Name | toCamel}}: {{.Type | toType}};
 	{{end}}
 	{{range .Methods}}
-	{{.Name | toCamel}}({{$rl := (len .Args)}}{{range $index,$arg := .Args}}{{$arg.Name | toCamel}}: {{$arg.Type | toType}}{{if lt $index $rl}}, {{end}}{{end}}): {{if ge (len .Rets) 1}}Promise<{{$ret := (index .Rets 0)}}{{$ret.Type | toType}}> {{else}}Promise<void>{{end}};
+	{{range .Comments}}/**
+	* {{.}}
+	*/
+	{{end}}{{.Name | toCamel}}({{$rl := (len .Args)}}{{range $index,$arg := .Args}}{{$arg.Name | toCamel}}: {{$arg.Type | toType}}{{if lt $index $rl}}, {{end}}{{end}}): {{if ge (len .Rets) 1}}Promise<{{$ret := (index .Rets 0)}}{{$ret.Type | toType}}> {{else}}Promise<void>{{end}};
 	{{end}}
 }
 {{end}}
 
 {{range .Structs}}{{$structName := .Name}}
-export function {{.Name}}(): {{.Name}} {
+{{range .Comments}}/**
+* {{.}}
+*/
+{{end}}export function {{.Name}}(): {{.Name}} {
 	
 	return {
 		
@@ -320,9 +333,9 @@ export function {{.Name}}(): {{.Name}} {
 
 		{{range .Methods}}
 
-		{{.Name | toCamel}}({{$rl := (len .Args)}}{{range $index,$arg := .Args}}{{$arg.Name | toCamel}}: {{$arg.Type | toType}}{{if lt $index $rl}}, {{end}}{{end}}): {{if ge (len .Rets) 1}}Promise<{{$ret := (index .Rets 0)}}{{$ret.Type | toType}}> {{else}}Promise<void>{{end}} {
+		{{.Name | toCamel}}({{range $index,$arg := .Args}}{{$arg.Name | toCamel}}: {{$arg.Type | toType}}, {{end}}): {{if ge (len .Rets) 1}}Promise<{{$ret := (index .Rets 0)}}{{$ret.Type | toType}}> {{else}}Promise<void>{{end}} {
 			
-			return post{{$structName}}(this, '{{.Name | toMinus}}', {}){{if ge (len .Rets) 1}}.then((res: { data: any }) => res.data as {{$ret := (index .Rets 0)}}{{$ret.Type | toType}}){{end}};
+			return post{{$structName}}(this, '{{.Name | toMinus}}', { {{range $index,$arg := .Args}}{{$arg.Name | toCamel}}, {{end}} }){{if ge (len .Rets) 1}}.then((res: { data: any }) => res.data as {{$ret := (index .Rets 0)}}{{$ret.Type | toType}}){{end}};
 			
 		},
 		{{end}}
@@ -333,7 +346,7 @@ export function {{.Name}}(): {{.Name}} {
 
 // post data by restful api
 
-function post{{.Name}}({{.Name | toCamel}}: {{.Name}}, method: string, arg: {}): Promise<any> {
+function post{{.Name}}({{.Name | toCamel}}: {{.Name}}, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", ` + "`/{{$pkgName}}/{{.Name | toSnack}}/${method}`" + `, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -348,45 +361,225 @@ function post{{.Name}}({{.Name | toCamel}}: {{.Name}}, method: string, arg: {}):
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: {{.Name | toCamel}}, arg: arg }));
+		xhr.send(JSON.stringify({ data: {{.Name | toCamel}}, args }));
 	});
 }
 {{end}}
 `
 
 // GenerateDartCode generate dart code
-func GenerateDartCode(path string, pkg *Package) error {
-	t := template.Must(template.New("model").Funcs(template.FuncMap{
-		"toType": func(goType string) string {
-			return dartTypeMap[goType]
-		},
-		"toCamel": func(s string) string {
-			return cjson.ToCamel(s)
-		},
-		"toDefault": func(s string) string {
-			return dartDefaultValue[dartTypeMap[s]]
-		},
-	}).Parse(dartModelTemplate))
-	f, err := os.Create(filepath.Join(path, "static", "dart", fmt.Sprintf("%s.dart", sjson.ToSnackedName(pkg.Name))))
+func GenerateDartCode(path string, pkg *Package, dep map[string]*Package) error {
+	f, err := os.Create(filepath.Join(path, fmt.Sprintf("%s.dart", sjson.ToSnackedName(pkg.Name))))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
+
+	{
+		f.WriteString(fmt.Sprintln("// Code generated by github.com/tinkler/mqttadmin; DO NOT EDIT."))
+	}
+	var (
+		usedDepStruct = make(map[string]map[string]bool)
+	)
+	for _, s := range pkg.Structs {
+		fields := s.Fields
+		for _, m := range s.Methods {
+			fields = append(fields, m.Args...)
+			fields = append(fields, m.Rets...)
+		}
+		for _, f := range fields {
+			typ := f.Type
+		FIND:
+			typ = strings.TrimPrefix(typ, "*")
+			if _, isBt := tsTypeMap[typ]; !isBt {
+				if FindStruct(pkg, typ) == nil {
+					if dep != nil {
+						if nameSlice := strings.Split(typ, "."); len(nameSlice) > 1 {
+							if _, isDep := dep[nameSlice[0]]; isDep {
+								if FindStruct(dep[nameSlice[0]], nameSlice[1]) == nil {
+									return fmt.Errorf("type %s not found", typ)
+								} else {
+									if usedDepStruct[nameSlice[0]] == nil {
+										usedDepStruct[nameSlice[0]] = make(map[string]bool)
+									}
+									usedDepStruct[nameSlice[0]][nameSlice[1]] = true
+								}
+							} else {
+								if strings.HasPrefix(typ, "[]") {
+									typ = strings.TrimPrefix(typ, "[]")
+									goto FIND
+								} else {
+									return fmt.Errorf("package %s not found", nameSlice[0])
+								}
+							}
+						}
+
+					}
+				}
+			}
+		}
+	}
+	if len(usedDepStruct) > 0 {
+		for _, importName := range pkg.Imports {
+			if _, ok := usedDepStruct[importName]; ok {
+				f.WriteString(fmt.Sprintf("import './%[1]s.dart' as $%[1]s show %[2]s;\n", importName, strings.Join(func() []string {
+					var s []string
+					for _, ds := range dep[importName].Structs {
+						if _, ok := usedDepStruct[importName][ds.Name]; ok {
+							s = append(s, ds.Name)
+						}
+					}
+					return s
+				}(), ", "), importName))
+			}
+		}
+	}
+
+	t := template.Must(template.New("model").Funcs(template.FuncMap{
+		"toType": func(goType string) string {
+			nullCheckSuffix := ""
+			if strings.HasPrefix(goType, "*") {
+				nullCheckSuffix = "?"
+			}
+			goType = strings.ReplaceAll(goType, "*", "")
+			if typ := dartTypeMap[goType]; typ != "" {
+				return typ + nullCheckSuffix
+			}
+			if strings.HasPrefix(goType, "[]") {
+				var (
+					resTypePre string
+					resTypeSuf string
+					typ        = goType
+				)
+				for strings.HasPrefix(typ, "[]") {
+					resTypePre += "List<"
+					resTypeSuf += ">"
+					typ = strings.TrimPrefix(typ, "[]")
+				}
+				if typ := dartTypeMap[typ]; typ != "" {
+					return fmt.Sprintf(resTypePre+"%s"+resTypeSuf+nullCheckSuffix, typ)
+				}
+				if s := FindStruct(pkg, typ); s != nil {
+					return fmt.Sprintf(resTypePre+"%s"+resTypeSuf+nullCheckSuffix, typ)
+				}
+				if dep != nil {
+					if nameSplice := strings.Split(goType, "."); len(nameSplice) > 1 {
+						if pkg, isDep := dep[nameSplice[0]]; isDep {
+							if FindStruct(pkg, nameSplice[1]) != nil {
+								return fmt.Sprintf(resTypePre+"%s"+resTypeSuf+nullCheckSuffix, "$"+pkg.Name+"."+nameSplice[1])
+							}
+						}
+					}
+				}
+				return fmt.Sprintf(resTypePre+"%s"+resTypeSuf+nullCheckSuffix, typ)
+			}
+			typ := dartTypeMap[goType]
+			if typ != "" {
+				return typ + nullCheckSuffix
+			}
+			if s := FindStruct(pkg, typ); s != nil {
+				return typ + nullCheckSuffix
+			}
+			if dep != nil {
+				if nameSplice := strings.Split(goType, "."); len(nameSplice) > 1 {
+					if pkg, isDep := dep[nameSplice[0]]; isDep {
+						if FindStruct(pkg, nameSplice[1]) != nil {
+							return "$" + pkg.Name + "." + nameSplice[1] + nullCheckSuffix
+						}
+					}
+				}
+			}
+			return goType + nullCheckSuffix
+		},
+		"toCamel": func(s string) string {
+			return cjson.ToCamel(s)
+		},
+		"toDefault": func(goType string) string {
+			if strings.HasPrefix(goType, "*") {
+				return ""
+			}
+			goType = strings.ReplaceAll(goType, "*", "")
+			if typ := dartDefaultValue[dartTypeMap[goType]]; typ != "" {
+				return " = " + typ
+			}
+			if strings.HasPrefix(goType, "[]") {
+				return " = []"
+			}
+			if dep != nil {
+				if nameSplice := strings.Split(goType, "."); len(nameSplice) > 1 {
+					if pkg, isDep := dep[nameSplice[0]]; isDep {
+						if FindStruct(pkg, nameSplice[1]) != nil {
+							return " = $" + pkg.Name + "." + nameSplice[1] + "()"
+						}
+					}
+				}
+			}
+			return " = " + goType + "()"
+		},
+		"asToJson": func(goType string, name string) string {
+			if typ := dartTypeMap[goType]; typ != "" {
+				return ""
+			}
+			if strings.HasPrefix(goType, "[]") {
+				return ".map((e) => e.toJson()).toList()"
+			}
+			if strings.HasPrefix(goType, "*") {
+				return fmt.Sprintf(" != null ? %[1]s!.toJson() : null", name)
+			}
+			return name + ".toJson()"
+		},
+		"fromJson": func(goType string, name string) string {
+			goType = strings.ReplaceAll(goType, "*", "")
+			if typ := dartTypeMap[goType]; typ != "" {
+				return ""
+			}
+			if strings.HasPrefix(goType, "[]") {
+				return fmt.Sprintf(" == null ? [] : json[\"%s\"].map((e) => %s.fromJson(e)).toList()", name, strings.TrimPrefix(goType, "[]"))
+			}
+			if s := FindStruct(pkg, goType); s != nil {
+				return fmt.Sprintf(" == null ? %[1]s() : %[1]s.fromJson(json[\"%[2]s\"])", goType, name)
+			}
+			if dep != nil {
+				if nameSplice := strings.Split(goType, "."); len(nameSplice) > 1 {
+					if pkg, isDep := dep[nameSplice[0]]; isDep {
+						if FindStruct(pkg, nameSplice[1]) != nil {
+							return fmt.Sprintf(" == null ? %[1]s() : %[1]s.fromJson(json[\"%[2]s\"])", "$"+pkg.Name+"."+nameSplice[1], name)
+						}
+					}
+				}
+			}
+			return ".fromJson($s)"
+		},
+	}).Parse(dartModelTemplate))
+
 	return t.Execute(f, pkg)
 }
 
 // dart template
-var dartModelTemplate = `// Code generated by github.com/tinkler/mqttadmin; DO NOT EDIT.
+var dartModelTemplate = `
 {{range .Structs}}
 class {{.Name}} {
 	{{range .Fields}}
-	{{.Type | toType}} {{.Name | toCamel}} = {{.Type | toDefault}};
+	{{.Type | toType}} {{.Name | toCamel}}{{.Type | toDefault}};
 	{{end}}
 	{{range .Methods}}
 	Future<{{if .Rets}}{{$rl := (len .Rets)}}{{range $index,$ret := .Rets}}{{$ret.Type | toType}}{{if lt $index $rl}}, {{end}}{{end}} {{else}}void{{end}}> {{.Name | toCamel}}({{range .Args}}{{.Type | toType}} {{.Name | toCamel}}, {{end}}) async {
 		
 	}
 	{{end}}
+	{{.Name}}();
+	Map<String, dynamic> toJson() {
+		return {
+			{{range .Fields}}
+			"{{.Name | toCamel}}": {{.Name | toCamel}}{{asToJson .Type (.Name | toCamel)}},
+			{{end}}
+		};
+	}
+	{{.Name}}.fromJson(Map<String, dynamic> json) {
+		{{range .Fields}}
+		{{.Name | toCamel}} = json["{{.Name | toCamel}}"]{{fromJson .Type (.Name | toCamel)}};
+		{{end}}
+	}
 }
 {{end}}
 
@@ -405,7 +598,7 @@ func GenerateSwiftCode(path string, pkg *Package) error {
 			return swiftDefaultValue[swiftTypeMap[s]]
 		},
 	}).Parse(swiftModelTemplate))
-	f, err := os.Create(filepath.Join(path, "static", "swift", cjson.SnakeCaseToFullCamelCase(pkg.Name)+".swift"))
+	f, err := os.Create(filepath.Join(path, cjson.SnakeCaseToFullCamelCase(pkg.Name)+".swift"))
 	if err != nil {
 		return err
 	}

@@ -36,7 +36,7 @@ export function Page(): Page {
 
 		fetchUser(): Promise<User[]>  {
 			
-			return postPage(this, 'fetch-user', {}).then((res: { data: any }) => res.data as User[]);
+			return postPage(this, 'fetch-user', {  }).then((res: { data: any }) => res.data as User[]);
 			
 		},
 		
@@ -47,7 +47,7 @@ export function Page(): Page {
 
 // post data by restful api
 
-function postPage(page: Page, method: string, arg: {}): Promise<any> {
+function postPage(page: Page, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/page/page/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -62,7 +62,7 @@ function postPage(page: Page, method: string, arg: {}): Promise<any> {
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: page, arg: arg }));
+		xhr.send(JSON.stringify({ data: page, args }));
 	});
 }
 

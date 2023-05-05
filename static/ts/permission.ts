@@ -64,14 +64,14 @@ export function Permission(): Permission {
 
 		savePermission(): Promise<void> {
 			
-			return postPermission(this, 'save-permission', {});
+			return postPermission(this, 'save-permission', {  });
 			
 		},
 		
 
 		deletePermission(): Promise<void> {
 			
-			return postPermission(this, 'delete-permission', {});
+			return postPermission(this, 'delete-permission', {  });
 			
 		},
 		
@@ -82,7 +82,7 @@ export function Permission(): Permission {
 
 // post data by restful api
 
-function postPermission(permission: Permission, method: string, arg: {}): Promise<any> {
+function postPermission(permission: Permission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/permission/permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -97,7 +97,7 @@ function postPermission(permission: Permission, method: string, arg: {}): Promis
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: permission, arg: arg }));
+		xhr.send(JSON.stringify({ data: permission, args }));
 	});
 }
 
@@ -120,14 +120,14 @@ export function RolePermission(): RolePermission {
 
 		savePermission(): Promise<void> {
 			
-			return postRolePermission(this, 'save-permission', {});
+			return postRolePermission(this, 'save-permission', {  });
 			
 		},
 		
 
 		deletePermission(): Promise<void> {
 			
-			return postRolePermission(this, 'delete-permission', {});
+			return postRolePermission(this, 'delete-permission', {  });
 			
 		},
 		
@@ -138,7 +138,7 @@ export function RolePermission(): RolePermission {
 
 // post data by restful api
 
-function postRolePermission(rolePermission: RolePermission, method: string, arg: {}): Promise<any> {
+function postRolePermission(rolePermission: RolePermission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/permission/role_permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -153,7 +153,7 @@ function postRolePermission(rolePermission: RolePermission, method: string, arg:
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: rolePermission, arg: arg }));
+		xhr.send(JSON.stringify({ data: rolePermission, args }));
 	});
 }
 
@@ -176,14 +176,14 @@ export function UserPermission(): UserPermission {
 
 		savePermission(): Promise<void> {
 			
-			return postUserPermission(this, 'save-permission', {});
+			return postUserPermission(this, 'save-permission', {  });
 			
 		},
 		
 
 		deletePermission(): Promise<void> {
 			
-			return postUserPermission(this, 'delete-permission', {});
+			return postUserPermission(this, 'delete-permission', {  });
 			
 		},
 		
@@ -194,7 +194,7 @@ export function UserPermission(): UserPermission {
 
 // post data by restful api
 
-function postUserPermission(userPermission: UserPermission, method: string, arg: {}): Promise<any> {
+function postUserPermission(userPermission: UserPermission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/permission/user_permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -209,7 +209,7 @@ function postUserPermission(userPermission: UserPermission, method: string, arg:
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: userPermission, arg: arg }));
+		xhr.send(JSON.stringify({ data: userPermission, args }));
 	});
 }
 

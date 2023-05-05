@@ -30,7 +30,7 @@ export function Role(): Role {
 
 		saveRole(): Promise<void> {
 			
-			return postRole(this, 'save-role', {});
+			return postRole(this, 'save-role', {  });
 			
 		},
 		
@@ -41,7 +41,7 @@ export function Role(): Role {
 
 // post data by restful api
 
-function postRole(role: Role, method: string, arg: {}): Promise<any> {
+function postRole(role: Role, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
 	xhr.open("POST", `/role/role/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
@@ -56,7 +56,7 @@ function postRole(role: Role, method: string, arg: {}): Promise<any> {
 		xhr.onerror = () => {
 			reject(new Error(xhr.statusText));
 		};
-		xhr.send(JSON.stringify({ data: role, arg: arg }));
+		xhr.send(JSON.stringify({ data: role, args }));
 	});
 }
 

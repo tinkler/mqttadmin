@@ -16,15 +16,15 @@ func TestGenerateGoCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
-	err = GenerateRoutes("../../", pkg, pkgs)
+	err = GenerateChiRoutes("../route", pkg, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = GenerateRoutes("../../", pkg2, pkgs)
+	err = GenerateChiRoutes("../route", pkg2, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = GenerateRoutes("../../", pkg3, pkgs)
+	err = GenerateChiRoutes("../route", pkg3, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,17 +44,17 @@ func TestGenerateTSCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
-	err = GenerateTSCode("../../", pkg, pkgs)
+	err = GenerateTSCode("../../static/ts", pkg, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// dependency test
-	err = GenerateTSCode("../../", pkg2, pkgs)
+	err = GenerateTSCode("../../static/ts", pkg2, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// array test
-	err = GenerateTSCode("../../", pkg3, pkgs)
+	err = GenerateTSCode("../../static/ts", pkg3, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,24 @@ func TestGenerateDartCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = GenerateDartCode("../../", pkg)
+	pkg2, err := ParsePackage("../model/role")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg3, err := ParsePackage("../model/page")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
+	err = GenerateDartCode("../../static/dart", pkg, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateDartCode("../../static/dart", pkg2, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateDartCode("../../static/dart", pkg3, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}
