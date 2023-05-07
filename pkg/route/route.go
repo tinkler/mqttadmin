@@ -5,6 +5,7 @@ type Model[T any, S any] struct {
 	Args S `json:",omitempty"`
 }
 
-type Res[T any] struct {
+type Res[T any, S any] struct {
 	Data T `json:",omitempty"`
+	Resp S `json:",omitempty"`
 }

@@ -19,8 +19,7 @@ func RoutesRole(m *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[struct{}]{}
-			
+			res := Res[*role.Role,any]{Data:m.Data}
 			err = m.Data.SaveRole(r.Context())
 			
 			if status.HttpError(w, err) {

@@ -5,7 +5,8 @@ import (
 )
 
 func TestParsePackage(t *testing.T) {
-	pkg, err := ParsePackage("../model/user")
+
+	pkg, err := ParsePackage("../model/user", GetModulePath())
 	if err != nil {
 		t.Fatal(err)
 	}

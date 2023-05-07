@@ -13,6 +13,24 @@ import (
 func RoutesUser(m *chi.Mux) {
 	m.Route("/user", func(r chi.Router) {
 		
+		r.Post("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.Auth, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.Auth,*user.User]{Data:m.Data}
+			res.Resp, err = m.Data.Login(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
 		r.Post("/user/save", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*user.User, any]{}
 			err := sjson.Bind(r, &m)
@@ -20,8 +38,7 @@ func RoutesUser(m *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[struct{}]{}
-			
+			res := Res[*user.User,any]{Data:m.Data}
 			err = m.Data.Save(r.Context())
 			
 			if status.HttpError(w, err) {
@@ -33,14 +50,15 @@ func RoutesUser(m *chi.Mux) {
 
 		})
 		r.Post("/user/add-role", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.User, struct{ Role *role.Role }]{}
+			m := Model[*user.User, struct{
+				Role *role.Role 
+				 } ]{}
 			err := sjson.Bind(r, &m)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[struct{}]{}
-			
+			res := Res[*user.User,any]{Data:m.Data}
 			err = m.Data.AddRole(r.Context(), m.Args.Role, )
 			
 			if status.HttpError(w, err) {
@@ -58,8 +76,7 @@ func RoutesUser(m *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[struct{}]{}
-			
+			res := Res[*user.UserProfile,any]{Data:m.Data}
 			err = m.Data.Save(r.Context())
 			
 			if status.HttpError(w, err) {
@@ -77,28 +94,8 @@ func RoutesUser(m *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[struct{}]{}
-			
+			res := Res[*user.UserRole,any]{Data:m.Data}
 			err = m.Data.Save(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.Auth, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.User]{}
-			
-			res.Data, err = m.Data.Login(r.Context())
 			
 			if status.HttpError(w, err) {
 				return

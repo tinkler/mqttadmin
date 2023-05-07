@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -33,9 +32,10 @@ type Struct struct {
 }
 
 type Package struct {
-	Name    string
-	Imports []string
-	Structs []Struct
+	Name       string
+	Imports    []string
+	ImportsMap map[string]string
+	Structs    []Struct
 }
 
 func toField(t ast.Expr) (f *Field) {
@@ -68,9 +68,13 @@ func toField(t ast.Expr) (f *Field) {
 	return
 }
 
-func ParsePackage(path string) (*Package, error) {
+// Path is the path of the package
+// modulePath is the name of the module which the package belongs to
+func ParsePackage(path string, modulePath string) (*Package, error) {
 	var (
-		pkg        = &Package{}
+		pkg = &Package{
+			ImportsMap: map[string]string{},
+		}
 		pkgImports = map[string]bool{}
 	)
 	fset := token.NewFileSet()
@@ -78,12 +82,12 @@ func ParsePackage(path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-	cp, _ := os.Getwd()
 
-	path = filepath.Join(cp, path)
-	path = path[:strings.LastIndex(path, "/")]
+	path = modulePath + "/" + strings.TrimPrefix(strings.TrimPrefix(strings.ReplaceAll(path, string(filepath.Separator), "/"), "./"), "../")
 	for _, p := range pkgs {
 		pkg.Name = p.Name
+		pkg.ImportsMap[pkg.Name] = path
+		path = strings.TrimSuffix(path, "/"+pkg.Name)
 		for _, f := range p.Files {
 			ast.Inspect(f, func(n ast.Node) bool {
 				switch x := n.(type) {
@@ -95,6 +99,7 @@ func ParsePackage(path string) (*Package, error) {
 							if !pkgImports[impPath] {
 								pkgImports[impPath] = true
 								pkg.Imports = append(pkg.Imports, importName)
+								pkg.ImportsMap[importName] = impPath
 							}
 						}
 					}

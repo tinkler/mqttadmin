@@ -31,7 +31,7 @@ func mkdirForOutput(dir string, codes []*gen.GenCodeConf) {
 }
 
 // generate all files when start
-func beforeWatch(dir string, codes []*gen.GenCodeConf) (cache map[string]*parser.Package, err error) {
+func beforeWatch(dir string, modulePath string, codes []*gen.GenCodeConf) (cache map[string]*parser.Package, err error) {
 	cache = make(map[string]*parser.Package)
 	// traverse dir
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, e error) error {
@@ -44,7 +44,7 @@ func beforeWatch(dir string, codes []*gen.GenCodeConf) (cache map[string]*parser
 		if dir == path {
 			return nil
 		}
-		pkg, err := parser.ParsePackage(path)
+		pkg, err := parser.ParsePackage(path, modulePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -87,7 +87,8 @@ func main() {
 	gen.ParseGenConf()
 	gf := gen.GetGenConf()
 	mkdirForOutput(gf.Dir, gf.Codes)
-	pkgs, err := beforeWatch(gf.Dir, gf.Codes)
+	modulePath := parser.GetModulePath()
+	pkgs, err := beforeWatch(gf.Dir, modulePath, gf.Codes)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,7 +114,7 @@ func main() {
 					}
 					fmt.Println("modified file:", event.Name)
 
-					pkg, err := parser.ParsePackage(filepath.Dir(event.Name))
+					pkg, err := parser.ParsePackage(filepath.Dir(event.Name), modulePath)
 					if err != nil {
 						log.Fatal(err)
 					}

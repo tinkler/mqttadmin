@@ -13,7 +13,6 @@ const (
 
 // HttpWrite writes the v to the http.ResponseWriter
 func HttpWrite(w http.ResponseWriter, v any) bool {
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", ContentType)
 	byt, err := Marshal(map[string]interface{}{
 		"code":    0,
@@ -29,5 +28,6 @@ func HttpWrite(w http.ResponseWriter, v any) bool {
 		status.HttpError(w, err)
 		return true
 	}
+	w.WriteHeader(http.StatusOK)
 	return true
 }

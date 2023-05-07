@@ -8,12 +8,18 @@ import (
 	"gorm.io/gorm"
 )
 
+type contextKey string
+
+const (
+	dbKey contextKey = "db"
+)
+
 func NewDB(cnf *conf.Conf, gormCnf *gorm.Config) (*gorm.DB, error) {
 	return gorm.Open(postgres.Open(cnf.Db.Dsn), gormCnf)
 }
 
 func GetDB(ctx context.Context) *gorm.DB {
-	i := ctx.Value("db")
+	i := ctx.Value(dbKey)
 	if i == nil {
 		panic("db not found in context")
 	}

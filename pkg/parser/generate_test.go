@@ -3,15 +3,16 @@ package parser
 import "testing"
 
 func TestGenerateGoCode(t *testing.T) {
-	pkg, err := ParsePackage("../model/user")
+	modulePath := GetModulePath() + "/pkg"
+	pkg, err := ParsePackage("../model/user", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg2, err := ParsePackage("../model/role")
+	pkg2, err := ParsePackage("../model/role", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg3, err := ParsePackage("../model/page")
+	pkg3, err := ParsePackage("../model/page", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,15 +32,16 @@ func TestGenerateGoCode(t *testing.T) {
 }
 
 func TestGenerateTSCode(t *testing.T) {
-	pkg, err := ParsePackage("../model/user")
+	modulePath := GetModulePath() + "/pkg"
+	pkg, err := ParsePackage("../model/user", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg2, err := ParsePackage("../model/role")
+	pkg2, err := ParsePackage("../model/role", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg3, err := ParsePackage("../model/page")
+	pkg3, err := ParsePackage("../model/page", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,15 +64,16 @@ func TestGenerateTSCode(t *testing.T) {
 }
 
 func TestGenerateDartCode(t *testing.T) {
-	pkg, err := ParsePackage("../model/user")
+	modulePath := GetModulePath() + "/pkg"
+	pkg, err := ParsePackage("../model/user", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg2, err := ParsePackage("../model/role")
+	pkg2, err := ParsePackage("../model/role", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkg3, err := ParsePackage("../model/page")
+	pkg3, err := ParsePackage("../model/page", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +93,8 @@ func TestGenerateDartCode(t *testing.T) {
 }
 
 func TestGenerateSwiftCode(t *testing.T) {
-	pkg, err := ParsePackage("../model/user")
+	modulePath := GetModulePath() + "/pkg"
+	pkg, err := ParsePackage("../model/user", modulePath)
 	if err != nil {
 		t.Fatal(err)
 	}

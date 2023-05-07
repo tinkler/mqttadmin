@@ -20,9 +20,8 @@ func RoutesPage(m *chi.Mux) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			res := Res[[]*user.User]{}
-			
-			res.Data, err = m.Data.FetchUser(r.Context())
+			res := Res[*page.Page,[]*user.User]{Data:m.Data}
+			res.Resp, err = m.Data.FetchUser(r.Context())
 			
 			if status.HttpError(w, err) {
 				return
