@@ -4,6 +4,7 @@ live code generator
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,9 +12,11 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/tinkler/mqttadmin/internal/gen"
+	"github.com/tinkler/mqttadmin/internal/rerun"
 	"github.com/tinkler/mqttadmin/pkg/parser"
 )
 
@@ -83,7 +86,24 @@ func beforeWatch(dir string, modulePath string, codes []*gen.GenCodeConf) (cache
 	return
 }
 
+var (
+	// version
+	version = "v0.0.1"
+	// buildTime
+	buildTime = "2021-01-01 00:00:00"
+	// gitCommit git commit id
+	gitCommit = "0"
+
+	// flags
+	runc bool
+)
+
+func init() {
+	flag.BoolVar(&runc, "r", false, "run after generate")
+}
+
 func main() {
+	flag.Parse()
 	gen.ParseGenConf()
 	gf := gen.GetGenConf()
 	mkdirForOutput(gf.Dir, gf.Codes)
@@ -92,6 +112,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("watching dir:", gf.Dir)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
@@ -101,6 +122,13 @@ func main() {
 	}
 	defer watcher.Close()
 	done := make(chan bool)
+
+	runner := rerun.NewRunner()
+	if runc {
+		runner.Enable()
+	}
+	runner.Init()
+
 	go func() {
 		for {
 			select {
@@ -113,10 +141,12 @@ func main() {
 						continue
 					}
 					fmt.Println("modified file:", event.Name)
+					time.Sleep(time.Second)
 
 					pkg, err := parser.ParsePackage(filepath.Dir(event.Name), modulePath)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("parse package error:", err)
+						continue
 					}
 					for _, c := range gf.Codes {
 						switch c.Typ {
@@ -142,6 +172,8 @@ func main() {
 							}
 						}
 					}
+
+					runner.Rerun()
 
 				}
 			case err := <-watcher.Errors:
@@ -169,7 +201,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	runner.Run()
+
 	<-quit
 	fmt.Println("退出")
+	runner.Stop()
 	done <- true
 }

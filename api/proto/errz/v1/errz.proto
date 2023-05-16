@@ -1,0 +1,47 @@
+// 定义所有错误详情
+syntax = "proto3";
+
+option go_package = "github.com/tinkler/mqttadmin/errz/v1;errz_v1";
+option java_multiple_files = true;
+option java_package = "ink.sfs.tinkler.mqttadmin.errz.v1";
+option java_outer_classname = "ErrzProto";
+
+package errz.v1;
+
+// 数据验证相关错误
+message ValidateError
+{
+    string field = 1;
+    string message = 10;
+    string en_message = 11;
+}
+
+// 数据验证相关错误
+message ServerError
+{
+    enum ErrorType {
+        OS = 0;
+        DB = 1;
+        INTERNAL = 2;
+        UNKOWN = 10;
+    }
+    ErrorType type = 1;
+    string message = 10;
+    string en_message = 11;
+}
+
+// 数据验证相关错误
+message AuthError
+{
+    enum ErrorType {
+        TOKEN_EXPIRED = 0;
+        TOKEN_INVALID = 1;
+        TOKEN_NOT_FOUND = 2;
+        DEVICE_NOT_MATCH = 10;
+        DEVICE_NOT_FOUND = 11;
+        PASSWORD_INVALID = 20;
+    }
+    ErrorType type = 1;
+    string message = 10;
+    string en_message = 11;
+}

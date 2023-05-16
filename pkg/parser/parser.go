@@ -88,7 +88,10 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 		pkg.Name = p.Name
 		pkg.ImportsMap[pkg.Name] = path
 		path = strings.TrimSuffix(path, "/"+pkg.Name)
-		for _, f := range p.Files {
+		for fileName, f := range p.Files {
+			if strings.HasSuffix(fileName, "_test.go") || strings.HasSuffix(fileName, "_model.go") {
+				continue
+			}
 			ast.Inspect(f, func(n ast.Node) bool {
 				switch x := n.(type) {
 				case *ast.ImportSpec:
@@ -111,7 +114,9 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 							case *ast.StructType:
 								s := Struct{}
 								s.Name = t.Name.Name
-
+								if !ast.IsExported(t.Name.Name) {
+									continue
+								}
 								for _, f := range st.Fields.List {
 									if len(f.Names) == 0 {
 										continue

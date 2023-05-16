@@ -10,7 +10,7 @@ import (
 	"github.com/tinkler/mqttadmin/pkg/model/user"
 )
 
-func RoutesPage(m *chi.Mux) {
+func RoutesPage(m chi.Router) {
 	m.Route("/page", func(r chi.Router) {
 		
 		r.Post("/page/fetch-user", func(w http.ResponseWriter, r *http.Request) {

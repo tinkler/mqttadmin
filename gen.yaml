@@ -1,0 +1,6 @@
+dir: ./pkg/model
+codes:
+  - typ: chi_route
+    out_dir: ./pkg/route
+  - typ: dart
+    out_dir: ./static/dart/model/mqtt/

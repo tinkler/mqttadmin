@@ -2,17 +2,6 @@
 import { Role } from './role';
 
 
-export interface Auth {
-	
-	username: string;
-	
-	password: string;
-	
-	
-	login(): Promise<User> ;
-	
-}
-
 /**
 * User is the user model
 */
@@ -21,7 +10,7 @@ export interface User {
 	/**
 	* ID is the primary key
 	*/
-	id: number;
+	id: string;
 	
 	username: string;
 	
@@ -64,53 +53,25 @@ export interface UserRole {
 	
 }
 
-
-
-export function Auth(): Auth {
+export interface Auth {
 	
-	return {
-		
-		
-
-		username: "",
-		
-
-		password: "",
-		
-
-		
-
-		login(): Promise<User>  {
-			
-			return postAuth(this, 'login', {  }).then((res: { data: any }) => res.data as User);
-			
-		},
-		
-		
-	};
+	/**
+	* UUID
+	*/
+	id: string;
+	
+	username: string;
+	
+	password: string;
+	
+	
+	signin(): Promise<User> ;
+	
+	signup(): Promise<User> ;
 	
 }
 
-// post data by restful api
 
-function postAuth(auth: Auth, method: string, args: {}): Promise<any> {
-	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/user/auth/${method}`, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	return new Promise((resolve, reject) => {
-		xhr.onload = () => {
-			if (xhr.status === 200) {
-				resolve(xhr.response);
-			} else {
-				reject(new Error(xhr.statusText));
-			}
-		};
-		xhr.onerror = () => {
-			reject(new Error(xhr.statusText));
-		};
-		xhr.send(JSON.stringify({ data: auth, args }));
-	});
-}
 
 /**
 * User is the user model
@@ -121,7 +82,7 @@ export function User(): User {
 		
 		
 
-		id: 0,
+		id: "",
 		
 
 		username: "",
@@ -263,6 +224,62 @@ function postUserRole(userRole: UserRole, method: string, args: {}): Promise<any
 			reject(new Error(xhr.statusText));
 		};
 		xhr.send(JSON.stringify({ data: userRole, args }));
+	});
+}
+
+export function Auth(): Auth {
+	
+	return {
+		
+		
+
+		id: "",
+		
+
+		username: "",
+		
+
+		password: "",
+		
+
+		
+
+		signin(): Promise<User>  {
+			
+			return postAuth(this, 'signin', {  }).then((res: { data: any }) => res.data as User);
+			
+		},
+		
+
+		signup(): Promise<User>  {
+			
+			return postAuth(this, 'signup', {  }).then((res: { data: any }) => res.data as User);
+			
+		},
+		
+		
+	};
+	
+}
+
+// post data by restful api
+
+function postAuth(auth: Auth, method: string, args: {}): Promise<any> {
+	const xhr = new XMLHttpRequest();
+	xhr.open("POST", `/user/auth/${method}`, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	return new Promise((resolve, reject) => {
+		xhr.onload = () => {
+			if (xhr.status === 200) {
+				resolve(xhr.response);
+			} else {
+				reject(new Error(xhr.statusText));
+			}
+		};
+		xhr.onerror = () => {
+			reject(new Error(xhr.statusText));
+		};
+		xhr.send(JSON.stringify({ data: auth, args }));
 	});
 }
 

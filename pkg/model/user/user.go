@@ -10,10 +10,10 @@ import (
 
 // User is the user model
 type User struct {
-	ID       int64 // ID is the primary key
+	ID       string // ID is the primary key
 	Username string
 	Email    string
-	Profiles []*UserProfile `json:",omitempty"`
+	Profiles []*UserProfile `json:",omitempty" gorm:"-"`
 }
 
 func NewUser() *User {

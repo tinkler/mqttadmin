@@ -9,7 +9,7 @@ import (
 	"github.com/tinkler/mqttadmin/pkg/status"
 )
 
-func RoutesRole(m *chi.Mux) {
+func RoutesRole(m chi.Router) {
 	m.Route("/role", func(r chi.Router) {
 		
 		r.Post("/role/save-role", func(w http.ResponseWriter, r *http.Request) {

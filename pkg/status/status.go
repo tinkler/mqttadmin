@@ -8,6 +8,10 @@ type Status struct {
 	Message string
 }
 
+func Ok(msg string) *Status {
+	return &Status{Code: 200, Message: msg}
+}
+
 func New(c int32, msg string) *Status {
 	return &Status{Code: c, Message: msg}
 }
