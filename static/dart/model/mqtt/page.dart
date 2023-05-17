@@ -29,10 +29,9 @@ class Page {
 				return [];
 			}
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		return [];
+		
 	}
 	
 	Page();

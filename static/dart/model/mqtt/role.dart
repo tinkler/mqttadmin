@@ -21,10 +21,8 @@ class Role {
 			var respModel = Role.fromJson(response.data['data']['data']);
 			assign(respModel);
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		
 	}
 	
 	Role();

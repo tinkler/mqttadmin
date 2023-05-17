@@ -14,7 +14,7 @@ import (
 
 type Auth struct {
 	ID          string // UUID
-	DeviceToken string // UUID
+	DeviceToken string `gorm:"-"` // UUID
 	Username    string
 	Password    string
 	Token       string `gorm:"-"`
@@ -104,6 +104,19 @@ func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 	if se.Error != nil {
 		return nil, se.Error
 	}
+	if r.DeviceToken == "" {
+		r.DeviceToken = uuid.New().String()
+	}
+
+	// when login success, clear the token
+	ClearShortTokenKV(r.ID)
+
+	token, err := getJwtToken(r.ID, r.DeviceToken)
+	if err != nil {
+		return nil, err
+	}
+	r.Password = ""
+	r.Token = token
 	return r, nil
 }
 

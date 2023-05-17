@@ -4,126 +4,6 @@ import './const.dart';
 import './role.dart' as $role show Role;
 
 
-class Auth {
-	
-	String id = "";
-	
-	String deviceToken = "";
-	
-	String username = "";
-	
-	String password = "";
-	
-	String token = "";
-	
-	
-	Future<Auth?> signin(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signin', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = Auth.fromJson(response.data['data']['data']);
-			assign(respModel);
-			if (response.data['data']['resp'] != null) {
-				return Auth.fromJson(response.data['data']['resp']);
-			} else {
-				return null;
-			}
-			
-			
-		} else {
-			throw Exception(response.data['message']);
-		}
-	}
-	
-	Future<void> quickSignin(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/quick-signin', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = Auth.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-			
-		} else {
-			throw Exception(response.data['message']);
-		}
-	}
-	
-	Future<Auth?> signup(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signup', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = Auth.fromJson(response.data['data']['data']);
-			assign(respModel);
-			if (response.data['data']['resp'] != null) {
-				return Auth.fromJson(response.data['data']['resp']);
-			} else {
-				return null;
-			}
-			
-			
-		} else {
-			throw Exception(response.data['message']);
-		}
-	}
-	
-	Auth();
-
-	assign(Auth other) {
-		
-		id = other.id;
-		
-		deviceToken = other.deviceToken;
-		
-		username = other.username;
-		
-		password = other.password;
-		
-		token = other.token;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"id": id,
-			
-			"device_token": deviceToken,
-			
-			"username": username,
-			
-			"password": password,
-			
-			"token": token,
-			
-		};
-	}
-	Auth.fromJson(Map<String, dynamic> json) {
-		
-		id = json["id"];
-		
-		deviceToken = json["device_token"];
-		
-		username = json["username"];
-		
-		password = json["password"];
-		
-		token = json["token"];
-		
-	}
-}
-
 class User {
 	
 	String id = "";
@@ -146,10 +26,8 @@ class User {
 			var respModel = User.fromJson(response.data['data']['data']);
 			assign(respModel);
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		
 	}
 	
 	Future<void> addRole(
@@ -164,10 +42,8 @@ class User {
 			var respModel = User.fromJson(response.data['data']['data']);
 			assign(respModel);
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		
 	}
 	
 	User();
@@ -226,10 +102,8 @@ class UserProfile {
 			var respModel = UserProfile.fromJson(response.data['data']['data']);
 			assign(respModel);
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		
 	}
 	
 	UserProfile();
@@ -274,10 +148,8 @@ class UserRole {
 			var respModel = UserRole.fromJson(response.data['data']['data']);
 			assign(respModel);
 			
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		
 	}
 	
 	UserRole();
@@ -310,6 +182,122 @@ class UserRole {
 		user = json["user"] == null ? User() : User.fromJson(json["user"]);
 		
 		role = json["role"] == null ? $role.Role() : $role.Role.fromJson(json["role"]);
+		
+	}
+}
+
+class Auth {
+	
+	String id = "";
+	
+	String deviceToken = "";
+	
+	String username = "";
+	
+	String password = "";
+	
+	String token = "";
+	
+	
+	Future<Auth?> signin(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signin', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = Auth.fromJson(response.data['data']['data']);
+			assign(respModel);
+			if (response.data['data']['resp'] != null) {
+				return Auth.fromJson(response.data['data']['resp']);
+			} else {
+				return null;
+			}
+			
+		}
+		return null;
+		
+	}
+	
+	Future<void> quickSignin(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/quick-signin', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = Auth.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	Future<Auth?> signup(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signup', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = Auth.fromJson(response.data['data']['data']);
+			assign(respModel);
+			if (response.data['data']['resp'] != null) {
+				return Auth.fromJson(response.data['data']['resp']);
+			} else {
+				return null;
+			}
+			
+		}
+		return null;
+		
+	}
+	
+	Auth();
+
+	assign(Auth other) {
+		
+		id = other.id;
+		
+		deviceToken = other.deviceToken;
+		
+		username = other.username;
+		
+		password = other.password;
+		
+		token = other.token;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"id": id,
+			
+			"device_token": deviceToken,
+			
+			"username": username,
+			
+			"password": password,
+			
+			"token": token,
+			
+		};
+	}
+	Auth.fromJson(Map<String, dynamic> json) {
+		
+		id = json["id"];
+		
+		deviceToken = json["device_token"];
+		
+		username = json["username"];
+		
+		password = json["password"];
+		
+		token = json["token"];
 		
 	}
 }

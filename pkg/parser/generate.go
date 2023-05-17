@@ -655,10 +655,9 @@ class {{.Name}} {
 				{{(index .Rets 0).Type | returnDefault}};
 			}
 			{{end}}
-			
-		} else {
-			throw Exception(response.data['message']);
 		}
+		{{if .Rets}}{{(index .Rets 0).Type | returnDefault}};
+		{{end}}
 	}
 	{{end}}
 	{{.Name}}();

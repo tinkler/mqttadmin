@@ -29,6 +29,19 @@ extension _ErrorTypeExtension on DioErrorType {}
 
 class _ErrorInterceptor extends Interceptor {
   @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.data['code'] != 0) {
+      handler.reject(_ModelError.fromDioError(
+          DioError(
+            requestOptions: response.requestOptions,
+          ),
+          response.data['message']));
+      return;
+    }
+    super.onResponse(response, handler);
+  }
+
+  @override
   void onError(DioError err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 404) {
       handler.resolve(Response(
@@ -42,5 +55,23 @@ class _ErrorInterceptor extends Interceptor {
       // Navigator.pushNamed(context, SiginPage.routeName);
     }
     super.onError(err, handler);
+  }
+}
+
+class _ModelError extends DioError {
+  _ModelError.fromDioError(DioError dioError, String message)
+      : super(
+            requestOptions: dioError.requestOptions,
+            response: dioError.response,
+            error: dioError.error,
+            type: dioError.type,
+            message: message);
+
+  @override
+  String toString() {
+    if (message != null) {
+      return message!;
+    }
+    return super.toString();
   }
 }
