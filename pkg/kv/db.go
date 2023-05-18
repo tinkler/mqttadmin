@@ -14,10 +14,10 @@ type dbBackend struct {
 func (b dbBackend) Get(key string) (string, bool) {
 	var value sql.NullString
 	if err := db.DB().Raw(`SELECT value FROM sys.server_cache WHERE key = $1
-		AND expire_time >= now() AND delete_at = null
+		AND expire_time >= now() AND delete_at is null
 		UNION ALL 
 	SELECT value FROM sys.server_cache WHERE key = $1
-		AND expire_time IS NULL AND delete_at = null
+		AND expire_time IS NULL AND delete_at is null
 	`, key).Find(&value).Error; err != nil {
 		logger.Error(err)
 	}

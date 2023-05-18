@@ -63,8 +63,16 @@ func (a *Auth) QuickSignin(ctx context.Context) error {
 	if a.Token == "" {
 		return errz.ErrVdM("token", "token is empty", "登录令牌不能为空")
 	}
-	_, err := CheckJwtToken(context.TODO(), a.Token)
-	return err
+	_, err := CheckJwtToken(context.TODO(), a.DeviceToken, a.Token)
+	if err != nil {
+		return err
+	}
+	token, err := getJwtToken(a.ID, a.DeviceToken)
+	if err != nil {
+		return err
+	}
+	a.Token = token
+	return nil
 }
 
 func (a *Auth) Signup(ctx context.Context) (*Auth, error) {

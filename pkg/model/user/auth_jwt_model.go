@@ -86,7 +86,7 @@ func getShortTokenKV(accountID, deviceID string) string {
 		logger.Error(err)
 		return ""
 	}
-	return tc[accountID]
+	return tc[deviceID]
 }
 
 func setShortTokenKV(accountID, deviceID string, token string, expireTime time.Time) {
@@ -119,8 +119,8 @@ func shortTokenKvKey(accountID string) string {
 	return fmt.Sprintf("auth:%s:", accountID)
 }
 
-func CheckJwtToken(ctx context.Context, token string) (context.Context, error) {
-	if len(token) <= 10 {
+func CheckJwtToken(ctx context.Context, deviceToken string, token string) (context.Context, error) {
+	if len(token) <= 10 || len(deviceToken) <= 10 {
 		return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
 	}
 	verifiedToken, err := jwt.Parse([]byte(token), jwt.WithKey(jwa.HS256, keyStr))
@@ -182,13 +182,13 @@ func CheckJwtToken(ctx context.Context, token string) (context.Context, error) {
 			logger.Debug("%T", deviceIdInt)
 			return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
 		} else {
-			// 不存在,令牌被刷新
-			shortToken := getShortTokenKV(hasuraClaims.UserID, deviceID)
-			if shortToken != "" {
-				return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_EXPIRED)
+			if deviceToken[:10] != deviceID {
+				// the token is not owned by the device
+				return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
 			}
-			// 被重新登录刷新
-			if shortToken != token[len(token)-10:] {
+			shortToken := getShortTokenKV(hasuraClaims.UserID, deviceToken)
+			// 被重新登录刷新或者被其他设备登录刷新
+			if shortToken != token[:10] {
 				return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_EXPIRED)
 			}
 
