@@ -14,7 +14,7 @@ func HttpError(w http.ResponseWriter, err error) bool {
 	case *Status:
 		if s.Code == http.StatusOK {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"code":1,"message":"` + s.Message + `"}`))
+			_, _ = w.Write([]byte(`{"code":1,"message":"` + s.Message + `", "cn_message":"` + s.CnMessage + `"}`))
 			return true
 		}
 		http.Error(w, s.Error(), int(s.Code))

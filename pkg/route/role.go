@@ -12,7 +12,7 @@ import (
 func RoutesRole(m chi.Router) {
 	m.Route("/role", func(r chi.Router) {
 		
-		r.Post("/role/save-role", func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/role/save", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*role.Role, any]{}
 			err := sjson.Bind(r, &m)
 			if err != nil {
@@ -20,7 +20,7 @@ func RoutesRole(m chi.Router) {
 				return
 			}
 			res := Res[*role.Role,any]{Data:m.Data}
-			err = m.Data.SaveRole(r.Context())
+			err = m.Data.Save(r.Context())
 			
 			if status.HttpError(w, err) {
 				return

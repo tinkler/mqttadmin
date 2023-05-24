@@ -5,15 +5,14 @@ import './const.dart';
 
 class Role {
 	
-	int id = 0;
+	String id = "";
 	
 	String name = "";
 	
-	
-	Future<void> saveRole(
+	Future<void> save(
 		
 	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/role/role/save-role', data: {
+		var response = await D.instance.dio.post('$modelUrlPrefix/role/role/save', data: {
 			"data": this,
 			"args": {  }
 		});

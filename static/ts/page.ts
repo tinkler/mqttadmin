@@ -21,19 +21,13 @@ export function Page(): Page {
 	
 	return {
 		
-		
-
 		page: 0,
 		
-
 		perPage: 0,
 		
-
 		total: 0,
 		
-
 		
-
 		fetchUser(): Promise<User[]>  {
 			
 			return postPage(this, 'fetch-user', {  }).then((res: { data: any }) => res.data as User[]);

@@ -3,33 +3,29 @@ package user
 import (
 	"context"
 	"errors"
+	"log"
+	"os"
+	"path/filepath"
 	"testing"
 
-	"github.com/tinkler/mqttadmin/pkg/conf"
-	"github.com/tinkler/mqttadmin/pkg/db"
+	"github.com/joho/godotenv"
 	"github.com/tinkler/mqttadmin/pkg/status"
-	"gorm.io/gorm"
 )
 
-func getWrappedContext() context.Context {
-	ctx := context.Background()
-	testConf := &conf.Conf{}
-	testConf.Db = &conf.DbConfig{
-		Dsn: "host=localhost user=clans password=clans4105 dbname=clans port=5432 sslmode=disable TimeZone=Asia/Shanghai",
-	}
-	dbInst, err := db.NewDB(testConf, &gorm.Config{})
+func initEnv() {
+	root, _ := os.Getwd()
+	err := godotenv.Load(filepath.Join(root, "../../../.env"))
 	if err != nil {
-		panic(err)
+		log.Fatal("Error loading .env file:" + err.Error())
 	}
-	ctx = db.WithValue(ctx, dbInst)
-	return ctx
 }
 
 func TestAuthSignup(t *testing.T) {
-	ctx := getWrappedContext()
+	initEnv()
+	ctx := context.Background()
 	a := &Auth{
 		Username: "admin2",
-		Password: "admin",
+		Password: "admin2",
 	}
 	u, err := a.Signup(ctx)
 	if err != nil && !errors.Is(err, status.Ok("username already exists")) {
@@ -44,7 +40,8 @@ func TestAuthSignup(t *testing.T) {
 }
 
 func TestAuthSignin(t *testing.T) {
-	ctx := getWrappedContext()
+	initEnv()
+	ctx := context.Background()
 	a := &Auth{
 		Username: "admin2",
 		Password: "admin",

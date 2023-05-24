@@ -13,62 +13,6 @@ import (
 func RoutesUser(m chi.Router) {
 	m.Route("/user", func(r chi.Router) {
 		
-		r.Post("/user/save", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.User, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.User,any]{Data:m.Data}
-			err = m.Data.Save(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/user/add-role", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.User, struct{
-				Role *role.Role 
-				 } ]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.User,any]{Data:m.Data}
-			err = m.Data.AddRole(r.Context(), m.Args.Role, )
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.UserProfile, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.UserProfile,any]{Data:m.Data}
-			err = m.Data.Save(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
 		r.Post("/user_role/save", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*user.UserRole, any]{}
 			err := sjson.Bind(r, &m)
@@ -132,6 +76,98 @@ func RoutesUser(m chi.Router) {
 			}
 			res := Res[*user.Auth,*user.Auth]{Data:m.Data}
 			res.Resp, err = m.Data.Signup(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user/save", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.User, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.User,any]{Data:m.Data}
+			err = m.Data.Save(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user/add-role", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.User, struct{
+				Role *role.Role 
+				 } ]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.User,any]{Data:m.Data}
+			err = m.Data.AddRole(r.Context(), m.Args.Role, )
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user/get", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.User, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.User,any]{Data:m.Data}
+			err = m.Data.Get(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user/get-roles", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.User, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.User,any]{Data:m.Data}
+			err = m.Data.GetRoles(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.UserProfile, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.UserProfile,any]{Data:m.Data}
+			err = m.Data.Save(r.Context())
 			
 			if status.HttpError(w, err) {
 				return

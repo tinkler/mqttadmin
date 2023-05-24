@@ -12,7 +12,6 @@ class Page {
 	
 	int total = 0;
 	
-	
 	Future<List<$user.User>> fetchUser(
 		
 	) async {

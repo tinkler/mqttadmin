@@ -3,6 +3,9 @@ A development tool for mqtt
 In the future, it will be a tool for mqtt management and monitoring
 But now it's just a tool for generating mqtt client code
 
+## Dependencies
+* gorm
+
 ## Requirements
 * Go 1.20 or higher
 

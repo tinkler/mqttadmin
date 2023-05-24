@@ -11,7 +11,6 @@ class Permission {
 	
 	String name = "";
 	
-	
 	Future<void> savePermission(
 		
 	) async {
@@ -26,7 +25,6 @@ class Permission {
 		}
 		
 	}
-	
 	Future<void> deletePermission(
 		
 	) async {
@@ -78,7 +76,6 @@ class RolePermission {
 	
 	Permission? permission;
 	
-	
 	Future<void> savePermission(
 		
 	) async {
@@ -93,7 +90,6 @@ class RolePermission {
 		}
 		
 	}
-	
 	Future<void> deletePermission(
 		
 	) async {
@@ -151,7 +147,6 @@ class UserPermission {
 	
 	Permission? permission;
 	
-	
 	Future<void> savePermission(
 		
 	) async {
@@ -166,7 +161,6 @@ class UserPermission {
 		}
 		
 	}
-	
 	Future<void> deletePermission(
 		
 	) async {

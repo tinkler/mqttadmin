@@ -4,138 +4,13 @@ import './const.dart';
 import './role.dart' as $role show Role;
 
 
-class User {
-	
-	String id = "";
-	
-	String username = "";
-	
-	String email = "";
-	
-	List<UserProfile> profiles = [];
-	
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/save', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = User.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	Future<void> addRole(
-		$role.Role? role,
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/add-role', data: {
-			"data": this,
-			"args": { "role": role, }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = User.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	User();
-
-	assign(User other) {
-		
-		id = other.id;
-		
-		username = other.username;
-		
-		email = other.email;
-		
-		profiles = other.profiles;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"id": id,
-			
-			"username": username,
-			
-			"email": email,
-			
-			"profiles": profiles.map((e) => e.toJson()).toList(),
-			
-		};
-	}
-	User.fromJson(Map<String, dynamic> json) {
-		
-		id = json["id"];
-		
-		username = json["username"];
-		
-		email = json["email"];
-		
-		profiles = json["profiles"] == null ? [] : (json["profiles"] as List<dynamic>).map((e) => UserProfile.fromJson(e)).toList();
-		
-	}
-}
-
-class UserProfile {
-	
-	String phoneNo = "";
-	
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = UserProfile.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	UserProfile();
-
-	assign(UserProfile other) {
-		
-		phoneNo = other.phoneNo;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"phone_no": phoneNo,
-			
-		};
-	}
-	UserProfile.fromJson(Map<String, dynamic> json) {
-		
-		phoneNo = json["phone_no"];
-		
-	}
-}
-
 class UserRole {
 	
-	int id = 0;
+	String id = "";
 	
 	User? user;
 	
 	$role.Role? role;
-	
 	
 	Future<void> save(
 		
@@ -198,7 +73,6 @@ class Auth {
 	
 	String token = "";
 	
-	
 	Future<Auth?> signin(
 		
 	) async {
@@ -220,6 +94,7 @@ class Auth {
 		
 	}
 	
+	/// QuickSignin quick signin without password
 	Future<void> quickSignin(
 		
 	) async {
@@ -234,7 +109,6 @@ class Auth {
 		}
 		
 	}
-	
 	Future<Auth?> signup(
 		
 	) async {
@@ -298,6 +172,172 @@ class Auth {
 		password = json["password"];
 		
 		token = json["token"];
+		
+	}
+}
+
+class User {
+	
+	String id = "";
+	
+	String username = "";
+	
+	String email = "";
+	
+	List<UserProfile> profiles = [];
+	
+	List<$role.Role> roles = [];
+	
+	
+	/// Save saves the user to the database
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/save', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = User.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	/// AddRole adds a role to the user
+	Future<void> addRole(
+		$role.Role? role,
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/add-role', data: {
+			"data": this,
+			"args": { "role": role, }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = User.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	/// Get gets the user from the database
+	/// Only admin can get other user's information
+	Future<void> get(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/get', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = User.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	/// GetRoles gets the roles of the user
+	Future<void> getRoles(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/get-roles', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = User.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	User();
+
+	assign(User other) {
+		
+		id = other.id;
+		
+		username = other.username;
+		
+		email = other.email;
+		
+		profiles = other.profiles;
+		
+		roles = other.roles;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"id": id,
+			
+			"username": username,
+			
+			"email": email,
+			
+			"profiles": profiles.map((e) => e.toJson()).toList(),
+			
+			"roles": roles.map((e) => e.toJson()).toList(),
+			
+		};
+	}
+	User.fromJson(Map<String, dynamic> json) {
+		
+		id = json["id"];
+		
+		username = json["username"];
+		
+		email = json["email"];
+		
+		profiles = json["profiles"] == null ? [] : (json["profiles"] as List<dynamic>).map((e) => UserProfile.fromJson(e)).toList();
+		
+		roles = json["roles"] == null ? [] : (json["roles"] as List<dynamic>).map((e) => $role.Role.fromJson(e)).toList();
+		
+	}
+}
+
+class UserProfile {
+	
+	String phoneNo = "";
+	
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
+			"data": this,
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = UserProfile.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	UserProfile();
+
+	assign(UserProfile other) {
+		
+		phoneNo = other.phoneNo;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"phone_no": phoneNo,
+			
+		};
+	}
+	UserProfile.fromJson(Map<String, dynamic> json) {
+		
+		phoneNo = json["phone_no"];
 		
 	}
 }

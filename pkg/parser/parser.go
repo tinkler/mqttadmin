@@ -125,7 +125,7 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 									if field == nil {
 										continue
 									}
-									if strings.Contains(field.Type, "context.Context") {
+									if strings.Contains(field.Type, "context.Context") || strings.Contains(field.Type, "gorm") {
 										continue
 									}
 									for _, n := range f.Names {

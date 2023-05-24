@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -12,6 +14,7 @@ import (
 	errzpb "github.com/tinkler/mqttadmin/errz/v1"
 	"github.com/tinkler/mqttadmin/pkg/kv"
 	"github.com/tinkler/mqttadmin/pkg/logger"
+	"github.com/tinkler/mqttadmin/pkg/status"
 )
 
 const (
@@ -30,11 +33,14 @@ type HasuraClaims struct {
 	UserID string   `json:"x-hasura-user-id"`
 }
 
-func getJwtToken(accountID, deviceID string) (string, error) {
+func getJwtToken(accountID, deviceID string, roles []string) (string, error) {
 	t := jwt.New()
+	if len(roles) == 0 {
+		roles = []string{"user"}
+	}
 	t.Set(jwt.SubjectKey, "https://mqtt.sfs.ink")
 	ec := HasuraClaims{
-		Roles:  []string{"user"},
+		Roles:  roles,
 		Role:   "user",
 		UserID: accountID,
 	}
@@ -120,7 +126,7 @@ func shortTokenKvKey(accountID string) string {
 }
 
 func CheckJwtToken(ctx context.Context, deviceToken string, token string) (context.Context, error) {
-	if len(token) <= 10 || len(deviceToken) <= 10 {
+	if len(token) <= 10 {
 		return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
 	}
 	verifiedToken, err := jwt.Parse([]byte(token), jwt.WithKey(jwa.HS256, keyStr))
@@ -177,7 +183,7 @@ func CheckJwtToken(ctx context.Context, deviceToken string, token string) (conte
 	auth := authMiddleware{
 		claims: &hasuraClaims,
 	}
-	if deviceIdInt, deviceOk := verifiedToken.Get(TokenDeviceKey); deviceOk {
+	if deviceIdInt, deviceOk := verifiedToken.Get(TokenDeviceKey); deviceOk && deviceToken != "" {
 		if deviceID, ok := deviceIdInt.(string); !ok {
 			logger.Debug("%T", deviceIdInt)
 			return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
@@ -195,17 +201,27 @@ func CheckJwtToken(ctx context.Context, deviceToken string, token string) (conte
 			// 存设备id
 			auth.deviceID = deviceID
 		}
-	} else {
-		// 不存在,令牌被刷新
-		shortToken := getShortTokenKV(hasuraClaims.UserID, "")
-		if shortToken != "" {
-			return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_EXPIRED)
-		}
-		// 被重新登录刷新
-		if shortToken != token[len(token)-10:] {
-			return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_EXPIRED)
-		}
 	}
 
 	return context.WithValue(ctx, authMiddlewareKey, &auth), nil
+}
+
+type AuthConfig struct {
+	NoNeedAuth bool
+}
+
+func WrapAuth(c AuthConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+			ctx := r.Context()
+			if token != "" {
+				ctx, _ = CheckJwtToken(ctx, "", token)
+			} else if !c.NoNeedAuth {
+				status.HttpError(w, status.New(http.StatusUnauthorized, "unauthorized"))
+			}
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }

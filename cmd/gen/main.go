@@ -80,6 +80,12 @@ func beforeWatch(dir string, modulePath string, codes []*gen.GenCodeConf) (cache
 				if err != nil {
 					log.Fatal(err)
 				}
+			case "angular_delon":
+				err = parser.GenerateTSAngularDelonCode(c.OutDir, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
+
 			}
 		}
 	}
@@ -167,6 +173,11 @@ func main() {
 							}
 						case "chi_route":
 							err = parser.GenerateChiRoutes(c.OutDir, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "angular_delon":
+							err = parser.GenerateTSAngularDelonCode(c.OutDir, pkg, pkgs)
 							if err != nil {
 								log.Fatal(err)
 							}

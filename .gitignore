@@ -20,3 +20,5 @@ __debug_bin
 
 
 /cmd/*/*.pro.yaml
+
+.env

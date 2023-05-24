@@ -26,18 +26,18 @@ func (a *Auth) TableName() string {
 
 func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 	u := Auth{}
-	se := db.GetDB(ctx).Where("username = ?", a.Username).First(&u)
+	se := db.DB().Where("username = ?", a.Username).First(&u)
 	if se.Error != nil {
 		if errors.Is(se.Error, gorm.ErrRecordNotFound) {
-			return nil, status.Ok("user not found")
+			return nil, status.OkCn("user not found", "用户不存在")
 		}
 		return nil, se.Error
 	}
 
 	if err := a.Compare(u.Password); err != nil {
-		return nil, status.Ok("invalid password")
+		return nil, status.OkCn("invalid password", "密码错误")
 	}
-
+	a.ID = u.ID
 	if a.DeviceToken == "" {
 		a.DeviceToken = uuid.New().String()
 	}
@@ -45,7 +45,12 @@ func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 	// when login success, clear the token
 	ClearShortTokenKV(a.ID)
 
-	token, err := getJwtToken(a.ID, a.DeviceToken)
+	user := &User{ID: a.ID}
+	err := user.GetRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+	token, err := getJwtToken(a.ID, a.DeviceToken, user.GetRolesStrings())
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +60,7 @@ func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 	return a, nil
 }
 
-// QuickSignin quick signin with password
+// QuickSignin quick signin without password
 func (a *Auth) QuickSignin(ctx context.Context) error {
 	if a.DeviceToken == "" {
 		return errz.ErrVdM("device_token", "device token is empty", "登录设备号不能为空")
@@ -63,11 +68,18 @@ func (a *Auth) QuickSignin(ctx context.Context) error {
 	if a.Token == "" {
 		return errz.ErrVdM("token", "token is empty", "登录令牌不能为空")
 	}
-	_, err := CheckJwtToken(context.TODO(), a.DeviceToken, a.Token)
+	var err error
+	ctx, err = CheckJwtToken(ctx, a.DeviceToken, a.Token)
 	if err != nil {
 		return err
 	}
-	token, err := getJwtToken(a.ID, a.DeviceToken)
+	u := &User{ID: GetUserID(ctx)}
+	err = u.GetRoles(ctx)
+	if err != nil {
+		return err
+	}
+
+	token, err := getJwtToken(a.ID, a.DeviceToken, u.GetRolesStrings())
 	if err != nil {
 		return err
 	}
@@ -83,7 +95,7 @@ func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 		return nil, status.Ok("password is empty")
 	}
 
-	se := db.GetDB(ctx).Where("username = ?", a.Username).First(&Auth{})
+	se := db.DB().Where("username = ?", a.Username).First(&Auth{})
 	if se.Error == nil {
 		return nil, status.Ok(ErrMsgNameAreadyExist)
 	}
@@ -119,7 +131,12 @@ func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 	// when login success, clear the token
 	ClearShortTokenKV(r.ID)
 
-	token, err := getJwtToken(r.ID, r.DeviceToken)
+	u := &User{ID: r.ID}
+	err = u.GetRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+	token, err := getJwtToken(r.ID, r.DeviceToken, u.GetRolesStrings())
 	if err != nil {
 		return nil, err
 	}

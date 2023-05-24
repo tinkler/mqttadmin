@@ -1,1 +1,1 @@
-const String modelUrlPrefix = 'mqttadmin';
+const String modelUrlPrefix = 'mqtt';

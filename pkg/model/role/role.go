@@ -4,13 +4,19 @@ import (
 	"context"
 
 	"github.com/tinkler/mqttadmin/pkg/db"
+	"gorm.io/gorm"
 )
 
 type Role struct {
-	ID   int64
-	Name string
+	ID       string
+	Name     string
+	DeleteAt gorm.DeletedAt
 }
 
-func (r *Role) SaveRole(ctx context.Context) error {
-	return db.GetDB(ctx).Save(r).Error
+func (r *Role) TableName() string {
+	return "v1.role"
+}
+
+func (r *Role) Save(ctx context.Context) error {
+	return db.DB().Select("name").Save(r).Error
 }

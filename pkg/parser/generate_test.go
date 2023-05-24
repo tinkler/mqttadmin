@@ -63,6 +63,38 @@ func TestGenerateTSCode(t *testing.T) {
 
 }
 
+func TestGenerateTSAngularDelonCode(t *testing.T) {
+	modulePath := GetModulePath() + "/pkg"
+	pkg, err := ParsePackage("../model/user", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg2, err := ParsePackage("../model/role", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg3, err := ParsePackage("../model/page", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
+	err = GenerateTSAngularDelonCode("../../static/angular_delon/mqtt", pkg, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// dependency test
+	err = GenerateTSAngularDelonCode("../../static/angular_delon/mqtt", pkg2, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// array test
+	err = GenerateTSAngularDelonCode("../../static/angular_delon/mqtt", pkg3, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+}
+
 func TestGenerateDartCode(t *testing.T) {
 	modulePath := GetModulePath() + "/pkg"
 	pkg, err := ParsePackage("../model/user", modulePath)

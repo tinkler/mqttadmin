@@ -4,3 +4,5 @@ codes:
     out_dir: ./pkg/route
   - typ: dart
     out_dir: ./static/dart/model/mqtt/
+  - typ: angular_delon
+    out_dir: ./static/angular_delon/mqtt

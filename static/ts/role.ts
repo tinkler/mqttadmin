@@ -18,16 +18,11 @@ export function Role(): Role {
 	
 	return {
 		
-		
-
 		id: 0,
 		
-
 		name: "",
 		
-
 		
-
 		saveRole(): Promise<void> {
 			
 			return postRole(this, 'save-role', {  });

@@ -2,6 +2,36 @@
 import { Role } from './role';
 
 
+export interface Auth {
+	
+	/**
+	* UUID
+	*/
+	id: string;
+	
+	/**
+	* UUID
+	*/
+	deviceToken: string;
+	
+	username: string;
+	
+	password: string;
+	
+	token: string;
+	
+	
+	signin(): Promise<Auth> ;
+	
+	/**
+	* QuickSignin quick signin with password
+	*/
+	quickSignin(): Promise<void>;
+	
+	signup(): Promise<Auth> ;
+	
+}
+
 /**
 * User is the user model
 */
@@ -53,25 +83,66 @@ export interface UserRole {
 	
 }
 
-export interface Auth {
+
+
+export function Auth(): Auth {
 	
-	/**
-	* UUID
-	*/
-	id: string;
-	
-	username: string;
-	
-	password: string;
-	
-	
-	signin(): Promise<User> ;
-	
-	signup(): Promise<User> ;
+	return {
+		
+		id: "",
+		
+		deviceToken: "",
+		
+		username: "",
+		
+		password: "",
+		
+		token: "",
+		
+		
+		signin(): Promise<Auth>  {
+			
+			return postAuth(this, 'signin', {  }).then((res: { data: any }) => res.data as Auth);
+			
+		},
+		
+		quickSignin(): Promise<void> {
+			
+			return postAuth(this, 'quick-signin', {  });
+			
+		},
+		
+		signup(): Promise<Auth>  {
+			
+			return postAuth(this, 'signup', {  }).then((res: { data: any }) => res.data as Auth);
+			
+		},
+		
+		
+	};
 	
 }
 
+// post data by restful api
 
+function postAuth(auth: Auth, method: string, args: {}): Promise<any> {
+	const xhr = new XMLHttpRequest();
+	xhr.open("POST", `/user/auth/${method}`, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	return new Promise((resolve, reject) => {
+		xhr.onload = () => {
+			if (xhr.status === 200) {
+				resolve(xhr.response);
+			} else {
+				reject(new Error(xhr.statusText));
+			}
+		};
+		xhr.onerror = () => {
+			reject(new Error(xhr.statusText));
+		};
+		xhr.send(JSON.stringify({ data: auth, args }));
+	});
+}
 
 /**
 * User is the user model
@@ -80,29 +151,21 @@ export function User(): User {
 	
 	return {
 		
-		
-
 		id: "",
 		
-
 		username: "",
 		
-
 		email: "",
 		
-
 		profiles: ,
 		
-
 		
-
 		save(): Promise<void> {
 			
 			return postUser(this, 'save', {  });
 			
 		},
 		
-
 		addRole(role: Role, ): Promise<void> {
 			
 			return postUser(this, 'add-role', { role,  });
@@ -139,13 +202,9 @@ export function UserProfile(): UserProfile {
 	
 	return {
 		
-		
-
 		phoneNo: "",
 		
-
 		
-
 		save(): Promise<void> {
 			
 			return postUserProfile(this, 'save', {  });
@@ -182,19 +241,13 @@ export function UserRole(): UserRole {
 	
 	return {
 		
-		
-
 		id: 0,
 		
-
 		user: User(),
 		
-
 		role: Role(),
 		
-
 		
-
 		save(): Promise<void> {
 			
 			return postUserRole(this, 'save', {  });
@@ -224,62 +277,6 @@ function postUserRole(userRole: UserRole, method: string, args: {}): Promise<any
 			reject(new Error(xhr.statusText));
 		};
 		xhr.send(JSON.stringify({ data: userRole, args }));
-	});
-}
-
-export function Auth(): Auth {
-	
-	return {
-		
-		
-
-		id: "",
-		
-
-		username: "",
-		
-
-		password: "",
-		
-
-		
-
-		signin(): Promise<User>  {
-			
-			return postAuth(this, 'signin', {  }).then((res: { data: any }) => res.data as User);
-			
-		},
-		
-
-		signup(): Promise<User>  {
-			
-			return postAuth(this, 'signup', {  }).then((res: { data: any }) => res.data as User);
-			
-		},
-		
-		
-	};
-	
-}
-
-// post data by restful api
-
-function postAuth(auth: Auth, method: string, args: {}): Promise<any> {
-	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/user/auth/${method}`, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	return new Promise((resolve, reject) => {
-		xhr.onload = () => {
-			if (xhr.status === 200) {
-				resolve(xhr.response);
-			} else {
-				reject(new Error(xhr.statusText));
-			}
-		};
-		xhr.onerror = () => {
-			reject(new Error(xhr.statusText));
-		};
-		xhr.send(JSON.stringify({ data: auth, args }));
 	});
 }
 
