@@ -18,10 +18,12 @@ type Field struct {
 }
 
 type Method struct {
-	Name     string
-	Comments []string
-	Args     []Field
-	Rets     []Field
+	Name      string
+	Comments  []string
+	Args      []Field
+	Rets      []Field
+	Filename  string
+	StartLine int
 }
 
 type Struct struct {
@@ -164,6 +166,8 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 						if s.Name == x.Recv.List[0].Type.(*ast.StarExpr).X.(*ast.Ident).Name {
 							m := Method{}
 							m.Name = x.Name.Name
+							m.StartLine = fset.Position(x.Pos()).Line
+							m.Filename = strings.ReplaceAll(fileName, "\\", "/")
 							if !ast.IsExported(x.Name.Name) {
 								continue
 							}

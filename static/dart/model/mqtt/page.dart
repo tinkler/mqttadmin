@@ -16,7 +16,7 @@ class Page {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/page/page/fetch-user', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {

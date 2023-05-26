@@ -12,6 +12,42 @@ import (
 func RoutesPermission(m chi.Router) {
 	m.Route("/permission", func(r chi.Router) {
 		
+		r.Post("/user_permission/save-permission", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*permission.UserPermission, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*permission.UserPermission,any]{Data:m.Data}
+			err = m.Data.SavePermission(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
+		r.Post("/user_permission/delete-permission", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*permission.UserPermission, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*permission.UserPermission,any]{Data:m.Data}
+			err = m.Data.DeletePermission(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
 		r.Post("/permission/save-permission", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*permission.Permission, any]{}
 			err := sjson.Bind(r, &m)
@@ -74,42 +110,6 @@ func RoutesPermission(m chi.Router) {
 				return
 			}
 			res := Res[*permission.RolePermission,any]{Data:m.Data}
-			err = m.Data.DeletePermission(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/user_permission/save-permission", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*permission.UserPermission, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*permission.UserPermission,any]{Data:m.Data}
-			err = m.Data.SavePermission(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/user_permission/delete-permission", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*permission.UserPermission, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*permission.UserPermission,any]{Data:m.Data}
 			err = m.Data.DeletePermission(r.Context())
 			
 			if status.HttpError(w, err) {

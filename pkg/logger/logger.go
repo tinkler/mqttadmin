@@ -90,6 +90,10 @@ func wrapMessage(message string, level loggerMessageLevel) string {
 	return message
 }
 
+func wrapText(text string, ct ColorType) string {
+	return fmt.Sprintf("\033[%d;1m%s\033[0m", ct, text)
+}
+
 func Format(f interface{}, vs ...any) string {
 	var message string
 	switch fv := f.(type) {

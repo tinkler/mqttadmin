@@ -13,7 +13,7 @@ class Role {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/role/role/save', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {

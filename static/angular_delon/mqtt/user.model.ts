@@ -5,56 +5,6 @@ import { Role } from './role.model';
 import { _HttpClient } from '@delon/theme';
 import { modelUrlPrefix  } from './const';
 
-export interface UserRole {
-	
-	id: string;
-	
-	user: User;
-	
-	role: Role;
-	
-	
-	save(): Promise<void>;
-	
-}
-
-export class UserRole {
-	
-	id: string = "";
-	
-	user: User = new User(this.http);
-	
-	role: Role = new Role(this.http);
-	
-
-	constructor(
-		private http: _HttpClient,
-	){}
-
-	
-	save(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.http.post(`${modelUrlPrefix}/user/user_role/save`, { data: this, args: {  } }).subscribe({
-				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
-					if (res.code === 0) {
-						this.id = res.data.data['id'];
-						this.user = res.data.data['user'];
-						this.role = res.data.data['role'];
-						
-						resolve();
-					} else {
-						reject(res.message);
-					}
-				}, error: (err) => {
-					reject(err);
-				}
-			});
-		});
-	}
-	
-}
-
-
 export interface Auth {
 	
 	/**
@@ -74,10 +24,22 @@ export interface Auth {
 	token: string;
 	
 	
+	/**
+	* Signin sign in with username and password
+	*/
+	/**
+	* Require: Username, Password
+	*/
+	/**
+	* Optional: DeviceToken
+	*/
 	signin(): Promise<Auth> ;
 	
 	/**
 	* QuickSignin quick signin without password
+	*/
+	/**
+	* Require: DeviceToken, Token
 	*/
 	quickSignin(): Promise<void>;
 	
@@ -109,6 +71,15 @@ export class Auth {
 	){}
 
 	
+	/**
+	* Signin sign in with username and password
+	*/
+	/**
+	* Require: Username, Password
+	*/
+	/**
+	* Optional: DeviceToken
+	*/
 	signin(): Promise<Auth>  {
 		return new Promise((resolve, reject) => {
 			this.http.post(`${modelUrlPrefix}/user/auth/signin`, { data: this, args: {  } }).subscribe({
@@ -136,6 +107,9 @@ export class Auth {
 	
 	/**
 	* QuickSignin quick signin without password
+	*/
+	/**
+	* Require: DeviceToken, Token
 	*/
 	quickSignin(): Promise<void> {
 		return new Promise((resolve, reject) => {
@@ -187,6 +161,96 @@ export class Auth {
 }
 
 
+export interface UserProfile {
+	
+	phoneNo: string;
+	
+	
+	save(): Promise<void>;
+	
+}
+
+export class UserProfile {
+	
+	phoneNo: string = "";
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+	save(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.http.post(`${modelUrlPrefix}/user/user_profile/save`, { data: this, args: {  } }).subscribe({
+				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
+					if (res.code === 0) {
+						this.phoneNo = res.data.data['phone_no'];
+						
+						resolve();
+					} else {
+						reject(res.message);
+					}
+				}, error: (err) => {
+					reject(err);
+				}
+			});
+		});
+	}
+	
+}
+
+
+export interface UserRole {
+	
+	id: string;
+	
+	user: User;
+	
+	role: Role;
+	
+	
+	save(): Promise<void>;
+	
+}
+
+export class UserRole {
+	
+	id: string = "";
+	
+	user: User = new User(this.http);
+	
+	role: Role = new Role(this.http);
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+	save(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.http.post(`${modelUrlPrefix}/user/user_role/save`, { data: this, args: {  } }).subscribe({
+				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
+					if (res.code === 0) {
+						this.id = res.data.data['id'];
+						this.user = res.data.data['user'];
+						this.role = res.data.data['role'];
+						
+						resolve();
+					} else {
+						reject(res.message);
+					}
+				}, error: (err) => {
+					reject(err);
+				}
+			});
+		});
+	}
+	
+}
+
+
 /**
 * User is the user model
 */
@@ -215,6 +279,8 @@ export interface User {
 	* AddRole adds a role to the user
 	*/
 	addRole(role: Role, ): Promise<void>;
+	
+	removeRole(role: Role, ): Promise<void>;
 	
 	/**
 	* Get gets the user from the database
@@ -302,6 +368,28 @@ export class User {
 		});
 	}
 	
+	removeRole(role: Role, ): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.http.post(`${modelUrlPrefix}/user/user/remove-role`, { data: this, args: { role: role,  } }).subscribe({
+				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
+					if (res.code === 0) {
+						this.id = res.data.data['id'];
+						this.username = res.data.data['username'];
+						this.email = res.data.data['email'];
+						this.profiles = res.data.data['profiles'];
+						this.roles = res.data.data['roles'];
+						
+						resolve();
+					} else {
+						reject(res.message);
+					}
+				}, error: (err) => {
+					reject(err);
+				}
+			});
+		});
+	}
+	
 	/**
 	* Get gets the user from the database
 	*/
@@ -343,46 +431,6 @@ export class User {
 						this.email = res.data.data['email'];
 						this.profiles = res.data.data['profiles'];
 						this.roles = res.data.data['roles'];
-						
-						resolve();
-					} else {
-						reject(res.message);
-					}
-				}, error: (err) => {
-					reject(err);
-				}
-			});
-		});
-	}
-	
-}
-
-
-export interface UserProfile {
-	
-	phoneNo: string;
-	
-	
-	save(): Promise<void>;
-	
-}
-
-export class UserProfile {
-	
-	phoneNo: string = "";
-	
-
-	constructor(
-		private http: _HttpClient,
-	){}
-
-	
-	save(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.http.post(`${modelUrlPrefix}/user/user_profile/save`, { data: this, args: {  } }).subscribe({
-				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
-					if (res.code === 0) {
-						this.phoneNo = res.data.data['phone_no'];
 						
 						resolve();
 					} else {

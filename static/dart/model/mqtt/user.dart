@@ -4,63 +4,6 @@ import './const.dart';
 import './role.dart' as $role show Role;
 
 
-class UserRole {
-	
-	String id = "";
-	
-	User? user;
-	
-	$role.Role? role;
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_role/save', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = UserRole.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	UserRole();
-
-	assign(UserRole other) {
-		
-		id = other.id;
-		
-		user = other.user;
-		
-		role = other.role;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"id": id,
-			
-			"user": user != null ? user!.toJson() : null,
-			
-			"role": role != null ? role!.toJson() : null,
-			
-		};
-	}
-	UserRole.fromJson(Map<String, dynamic> json) {
-		
-		id = json["id"];
-		
-		user = json["user"] == null ? User() : User.fromJson(json["user"]);
-		
-		role = json["role"] == null ? $role.Role() : $role.Role.fromJson(json["role"]);
-		
-	}
-}
-
 class Auth {
 	
 	String id = "";
@@ -73,11 +16,15 @@ class Auth {
 	
 	String token = "";
 	
+	
+	/// Signin sign in with username and password
+	/// Require: Username, Password
+	/// Optional: DeviceToken
 	Future<Auth?> signin(
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signin', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -95,11 +42,12 @@ class Auth {
 	}
 	
 	/// QuickSignin quick signin without password
+	/// Require: DeviceToken, Token
 	Future<void> quickSignin(
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/quick-signin', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -113,7 +61,7 @@ class Auth {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/auth/signup', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -176,6 +124,104 @@ class Auth {
 	}
 }
 
+class UserProfile {
+	
+	String phoneNo = "";
+	
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
+			"data": toJson(),
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = UserProfile.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	UserProfile();
+
+	assign(UserProfile other) {
+		
+		phoneNo = other.phoneNo;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"phone_no": phoneNo,
+			
+		};
+	}
+	UserProfile.fromJson(Map<String, dynamic> json) {
+		
+		phoneNo = json["phone_no"];
+		
+	}
+}
+
+class UserRole {
+	
+	String id = "";
+	
+	User? user;
+	
+	$role.Role? role;
+	
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_role/save', data: {
+			"data": toJson(),
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = UserRole.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	UserRole();
+
+	assign(UserRole other) {
+		
+		id = other.id;
+		
+		user = other.user;
+		
+		role = other.role;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"id": id,
+			
+			"user": user != null ? user!.toJson() : null,
+			
+			"role": role != null ? role!.toJson() : null,
+			
+		};
+	}
+	UserRole.fromJson(Map<String, dynamic> json) {
+		
+		id = json["id"];
+		
+		user = json["user"] == null ? User() : User.fromJson(json["user"]);
+		
+		role = json["role"] == null ? $role.Role() : $role.Role.fromJson(json["role"]);
+		
+	}
+}
+
 class User {
 	
 	String id = "";
@@ -194,7 +240,7 @@ class User {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/save', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -211,7 +257,22 @@ class User {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/add-role', data: {
-			"data": this,
+			"data": toJson(),
+			"args": { "role": role, }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = User.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	Future<void> removeRole(
+		$role.Role? role,
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/remove-role', data: {
+			"data": toJson(),
 			"args": { "role": role, }
 		});
 		if (response.data['code'] == 0) {
@@ -228,7 +289,7 @@ class User {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/get', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -244,7 +305,7 @@ class User {
 		
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/user/user/get-roles', data: {
-			"data": this,
+			"data": toJson(),
 			"args": {  }
 		});
 		if (response.data['code'] == 0) {
@@ -297,47 +358,6 @@ class User {
 		profiles = json["profiles"] == null ? [] : (json["profiles"] as List<dynamic>).map((e) => UserProfile.fromJson(e)).toList();
 		
 		roles = json["roles"] == null ? [] : (json["roles"] as List<dynamic>).map((e) => $role.Role.fromJson(e)).toList();
-		
-	}
-}
-
-class UserProfile {
-	
-	String phoneNo = "";
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
-			"data": this,
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = UserProfile.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	UserProfile();
-
-	assign(UserProfile other) {
-		
-		phoneNo = other.phoneNo;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"phone_no": phoneNo,
-			
-		};
-	}
-	UserProfile.fromJson(Map<String, dynamic> json) {
-		
-		phoneNo = json["phone_no"];
 		
 	}
 }
