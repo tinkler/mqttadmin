@@ -216,7 +216,7 @@ func CheckDeviceToken(ctx context.Context, deviceToken string, tokenStr string) 
 
 			// 存设备id
 			auth.deviceID = deviceToken
-			return context.WithValue(ctx, authMiddlewareKey, &auth), nil
+			return context.WithValue(ctx, authMiddlewareKey, auth), nil
 		}
 	} else {
 		return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_INVALID)
@@ -245,7 +245,7 @@ func checkJwtToken(ctx context.Context, tokenStr string) (context.Context, error
 		return ctx, errz.ErrAuth(errzpb.AuthError_TOKEN_EXPIRED)
 	}
 
-	return context.WithValue(ctx, authMiddlewareKey, &auth), nil
+	return context.WithValue(ctx, authMiddlewareKey, auth), nil
 }
 
 func parseTokenStr(token string, ctx context.Context) (jwt.Token, *authorization, error) {

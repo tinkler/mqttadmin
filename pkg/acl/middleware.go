@@ -53,6 +53,16 @@ func HasRole(ctx context.Context, roles ...string) bool {
 	return false
 }
 
+func GetAllRoles(ctx context.Context) []string {
+	if ctx == nil {
+		return nil
+	}
+	if auth, ok := ctx.Value(authMiddlewareKey).(*authorization); ok {
+		return auth.claims.Roles
+	}
+	return nil
+}
+
 func GetUserID(ctx context.Context) string {
 	if ctx == nil {
 		return ""

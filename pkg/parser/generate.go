@@ -992,6 +992,10 @@ func GenerateDartCode(path string, pkg *Package, dep map[string]*Package) error 
 				return ""
 			}
 			if strings.HasPrefix(goType, "[]") {
+				goType = strings.TrimPrefix(goType, "[]")
+				if typ := dartTypeMap[goType]; typ != "" {
+					return ""
+				}
 				return ".map((e) => e.toJson()).toList()"
 			}
 			if strings.HasPrefix(goType, "*") {
