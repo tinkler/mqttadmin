@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tinkler/mqttadmin/errz"
+	"github.com/tinkler/mqttadmin/pkg/acl"
 	"github.com/tinkler/mqttadmin/pkg/db"
 	"github.com/tinkler/mqttadmin/pkg/status"
 	"golang.org/x/crypto/bcrypt"
@@ -24,6 +25,9 @@ func (a *Auth) TableName() string {
 	return "v1.user"
 }
 
+// Signin sign in with username and password
+// Require: Username, Password
+// Optional: DeviceToken
 func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 	u := Auth{}
 	se := db.DB().Where("username = ?", a.Username).First(&u)
@@ -43,14 +47,14 @@ func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 	}
 
 	// when login success, clear the token
-	ClearShortTokenKV(a.ID)
+	acl.SetDeviceRemoveFlag(a.ID, a.DeviceToken)
 
 	user := &User{ID: a.ID}
 	err := user.GetRoles(ctx)
 	if err != nil {
 		return nil, err
 	}
-	token, err := getJwtToken(a.ID, a.DeviceToken, user.GetRolesStrings())
+	token, err := acl.GetJwtToken(a.ID, a.DeviceToken, user.GetRolesStrings())
 	if err != nil {
 		return nil, err
 	}
@@ -61,6 +65,7 @@ func (a *Auth) Signin(ctx context.Context) (*Auth, error) {
 }
 
 // QuickSignin quick signin without password
+// Require: DeviceToken, Token
 func (a *Auth) QuickSignin(ctx context.Context) error {
 	if a.DeviceToken == "" {
 		return errz.ErrVdM("device_token", "device token is empty", "登录设备号不能为空")
@@ -69,17 +74,18 @@ func (a *Auth) QuickSignin(ctx context.Context) error {
 		return errz.ErrVdM("token", "token is empty", "登录令牌不能为空")
 	}
 	var err error
-	ctx, err = CheckJwtToken(ctx, a.DeviceToken, a.Token)
+	ctx, err = acl.CheckDeviceToken(ctx, a.DeviceToken, a.Token)
 	if err != nil {
 		return err
 	}
-	u := &User{ID: GetUserID(ctx)}
+	u := &User{ID: acl.GetUserID(ctx)}
 	err = u.GetRoles(ctx)
 	if err != nil {
 		return err
 	}
+	a.ID = u.ID
 
-	token, err := getJwtToken(a.ID, a.DeviceToken, u.GetRolesStrings())
+	token, err := acl.GetJwtToken(a.ID, a.DeviceToken, u.GetRolesStrings())
 	if err != nil {
 		return err
 	}
@@ -129,14 +135,14 @@ func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 	}
 
 	// when login success, clear the token
-	ClearShortTokenKV(r.ID)
+	acl.SetDeviceRemoveFlag(r.ID, r.DeviceToken)
 
 	u := &User{ID: r.ID}
 	err = u.GetRoles(ctx)
 	if err != nil {
 		return nil, err
 	}
-	token, err := getJwtToken(r.ID, r.DeviceToken, u.GetRolesStrings())
+	token, err := acl.GetJwtToken(r.ID, r.DeviceToken, u.GetRolesStrings())
 	if err != nil {
 		return nil, err
 	}

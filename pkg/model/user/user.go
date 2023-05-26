@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/tinkler/mqttadmin/pkg/acl"
 	"github.com/tinkler/mqttadmin/pkg/db"
 	"github.com/tinkler/mqttadmin/pkg/model/role"
 	"github.com/tinkler/mqttadmin/pkg/status"
@@ -28,7 +29,7 @@ func (u *User) TableName() string {
 
 // Save saves the user to the database
 func (u *User) Save(ctx context.Context) error {
-	if !HasRole(ctx, RoleAdmin) {
+	if !acl.HasRole(ctx, acl.RoleAdmin) {
 		return status.New(http.StatusForbidden, "no permission")
 	}
 	return db.DB().Save(u).Error
@@ -36,24 +37,25 @@ func (u *User) Save(ctx context.Context) error {
 
 // AddRole adds a role to the user
 func (u *User) AddRole(ctx context.Context, role *role.Role) error {
-	if u.ID == "" {
-		return status.New(400, "user id is 0")
+	if !acl.HasRole(ctx, acl.RoleAdmin) {
+		return status.StatusForbidden()
 	}
-	if role == nil || role.ID == "" {
-		return status.New(400, "role is nil or role id is empty")
+	return addRole(u, role)
+}
+
+func (u *User) RemoveRole(ctx context.Context, role *role.Role) error {
+	if !acl.HasRole(ctx, acl.RoleAdmin) {
+		return status.StatusForbidden()
 	}
-	if !HasRole(ctx, RoleAdmin) {
-		return status.StatusForbidden
-	}
-	return db.DB().Model(u).Association("Roles").Append(role)
+	return removeRole(u, role)
 }
 
 // Get gets the user from the database
 // Only admin can get other user's information
 func (u *User) Get(ctx context.Context) error {
-	if HasRole(ctx, RoleAdmin) {
+	if acl.HasRole(ctx, acl.RoleAdmin) {
 		if u.ID == "" {
-			userID := GetUserID(ctx)
+			userID := acl.GetUserID(ctx)
 			if userID == "" {
 				return status.New(400, "user id is 0")
 			} else {
@@ -62,14 +64,14 @@ func (u *User) Get(ctx context.Context) error {
 		}
 		return db.DB().First(u).Error
 	}
-	if HasRole(ctx, RoleUser) {
-		u.ID = GetUserID(ctx)
+	if acl.HasRole(ctx, acl.RoleUser) {
+		u.ID = acl.GetUserID(ctx)
 		if u.ID == "" {
-			return status.StatusInternalServer
+			return status.StatusInternalServer()
 		}
 		return db.DB().Where("id = ?", u.ID).First(u).Error
 	}
-	return status.StatusUnauthorized
+	return status.StatusUnauthorized()
 }
 
 // GetRoles gets the roles of the user

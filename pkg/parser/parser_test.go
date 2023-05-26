@@ -1,12 +1,15 @@
 package parser
 
 import (
+	"os"
 	"testing"
 )
 
 func TestParsePackage(t *testing.T) {
-
-	pkg, err := ParsePackage("../model/user", GetModulePath())
+	if err := os.Chdir("../.."); err != nil {
+		t.Fatal(err)
+	}
+	pkg, err := ParsePackage("pkg/model/user", GetModulePath())
 	if err != nil {
 		t.Fatal(err)
 	}

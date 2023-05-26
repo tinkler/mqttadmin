@@ -52,19 +52,21 @@ const (
 	CT_WHITE
 )
 
-var sourceDir string
-var errSourceDir string
+var sourceDir, errSourceDir, statusSourceDir string
 
 func init() {
 	_, file, _, _ := runtime.Caller(0)
 	sourceDir = regexp.MustCompile(`logger\.go`).ReplaceAllString(file, "")
 	errSourceDir, _ = filepath.Abs(sourceDir + "/../../errz")
+	errSourceDir = strings.ReplaceAll(errSourceDir, "\\", "/")
+	statusSourceDir, _ = filepath.Abs(sourceDir + "/../status")
+	statusSourceDir = strings.ReplaceAll(statusSourceDir, "\\", "/")
 }
 
 func writeRuntimeMessage() string {
 	for i := 2; i < 15; i++ {
 		_, file, line, ok := runtime.Caller(i)
-		if ok && (!strings.HasPrefix(file, sourceDir) && !strings.HasPrefix(file, errSourceDir) || strings.HasSuffix(file, "_test.go")) {
+		if ok && (!strings.HasPrefix(file, sourceDir) && !strings.HasPrefix(file, errSourceDir) && !strings.HasPrefix(file, statusSourceDir) || strings.HasSuffix(file, "_test.go")) {
 			return fmt.Sprintf("\033[%d;1m%s:%d\033[0m", CT_BLACK, file, line)
 		}
 	}

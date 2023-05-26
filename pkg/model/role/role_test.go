@@ -21,7 +21,7 @@ func initEnv() {
 func TestSaveRole(t *testing.T) {
 	initEnv()
 	role := &Role{
-		Name: "user",
+		Name: "clans_level_2",
 	}
 	err := role.Save(context.Background())
 	if err != nil {

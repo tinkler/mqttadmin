@@ -1059,7 +1059,7 @@ class {{.Name}} {
 		{{end}}
 	) async {
 		var response = await D.instance.dio.post('$modelUrlPrefix/{{$name}}/{{$struct.Name | toSnack}}/{{.Name | toMinus}}', data: {
-			"data": this,
+			"data": toJson(),
 			"args": { {{range .Args}}"{{.Name | toSnack}}": {{.Name | toCamel}},{{end}} }
 		});
 		if (response.data['code'] == 0) {
