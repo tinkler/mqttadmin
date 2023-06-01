@@ -1,6 +1,9 @@
 package parser
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestGenerateGoCode(t *testing.T) {
 	modulePath := GetModulePath() + "/pkg"
@@ -26,6 +29,69 @@ func TestGenerateGoCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = GenerateChiRoutes("../route", pkg3, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateProtoFile(t *testing.T) {
+	_ = os.Chdir("../../")
+	modulePath := GetModulePath()
+	pkg, err := ParsePackage("./pkg/model/user", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg2, err := ParsePackage("./pkg/model/role", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg3, err := ParsePackage("./pkg/model/page", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
+
+	basePath := modulePath
+	err = GenerateProtoFile("./api/proto", basePath, pkg, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateProtoFile("./api/proto", basePath, pkg2, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateProtoFile("./api/proto", basePath, pkg3, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateGsrv(t *testing.T) {
+	_ = os.Chdir("../../")
+	modulePath := GetModulePath()
+	pkg, err := ParsePackage("./pkg/model/user", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg2, err := ParsePackage("./pkg/model/role", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkg3, err := ParsePackage("./pkg/model/page", modulePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pkgs := map[string]*Package{"role": pkg2, "user": pkg, "page": pkg3}
+
+	err = GenerateGsrv("./pkg/gsrv", modulePath, pkg, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateGsrv("./pkg/gsrv", modulePath, pkg2, pkgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = GenerateGsrv("./pkg/gsrv", modulePath, pkg3, pkgs)
 	if err != nil {
 		t.Fatal(err)
 	}

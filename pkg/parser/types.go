@@ -3,6 +3,27 @@ go type
 */
 package parser
 
+// protoTypeMap go type map to proto type
+var protoTypeMap = map[string]string{
+	"string":  "string",
+	"int":     "int32",
+	"int8":    "int32",
+	"int16":   "int32",
+	"int32":   "int32",
+	"int64":   "int64",
+	"uint":    "uint32",
+	"uint8":   "uint32",
+	"uint16":  "uint32",
+	"uint32":  "uint32",
+	"uint64":  "uint64",
+	"float32": "float",
+	"float64": "double",
+	"bool":    "bool",
+	"byte":    "bytes",
+	"rune":    "string",
+	"error":   "string",
+}
+
 // tsTypeMap go type map to typescript type
 var tsTypeMap = map[string]string{
 	"string":  "string",

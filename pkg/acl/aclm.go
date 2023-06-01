@@ -100,21 +100,21 @@ func (a *ACLM) listenRoleAdd() {
 			}
 			roleNames := strings.Split(parts[1], ",")
 			var roleIDs []string
-			if err := db.DB().Raw("SELECT id FROM v1.role WHERE name IN ('" + strings.Join(roleNames, "','") + "')").Scan(&roleIDs).Error; err != nil {
+			if err := db.DB().Raw("SELECT id FROM authv1.role WHERE name IN ('" + strings.Join(roleNames, "','") + "')").Scan(&roleIDs).Error; err != nil {
 				logger.Error("Failed to get role id: %s", err)
 				continue
 			}
 			if len(roleIDs) == 0 {
 				logger.Warn("Failed to get role id: %v", roleNames)
 			} else {
-				if err := db.DB().Exec("INSERT INTO v1.user_role (user_id, role_id) VALUES ('" + userID + "', '" + strings.Join(roleIDs, "'), ('"+userID+"', '") + "') ON CONFLICT (user_id,role_id) DO UPDATE SET delete_at = null").Error; err != nil {
+				if err := db.DB().Exec("INSERT INTO authv1.user_role (user_id, role_id) VALUES ('" + userID + "', '" + strings.Join(roleIDs, "'), ('"+userID+"', '") + "') ON CONFLICT (user_id,role_id) DO UPDATE SET delete_at = null").Error; err != nil {
 					logger.Error("Failed to add user role: %s", err)
 					continue
 				}
 			}
 			SetAllDeviceRemoveFlag(userID)
 
-			if err := a.ch.Ack(d.DeliveryTag, false); err != nil {
+			if err := d.Ack(false); err != nil {
 				logger.Error("Failed to ack role add message: %s", err)
 			}
 		}
@@ -159,14 +159,14 @@ func (a *ACLM) listenRoleRemove() {
 			}
 			roleNames := strings.Split(parts[1], ",")
 
-			se := db.DB().Exec("UPDATE v1.user_role SET delete_at = CURRENT_TIMESTAMP WHERE user_id = ? AND role_id IN (SELECT id FROM v1.role WHERE name IN ('"+strings.Join(roleNames, "','")+"'))", userID)
+			se := db.DB().Exec("UPDATE authv1.user_role SET delete_at = CURRENT_TIMESTAMP WHERE user_id = ? AND role_id IN (SELECT id FROM authv1.role WHERE name IN ('"+strings.Join(roleNames, "','")+"'))", userID)
 			if se.Error != nil {
 				logger.Error("Failed to remove user role: %s", se.Error)
 				continue
 			}
 			SetAllDeviceRemoveFlag(userID)
 
-			err := d.Ack(true)
+			err := d.Ack(false)
 
 			if err != nil {
 				logger.Error("Failed to ack role add message: %s", err)
@@ -217,7 +217,7 @@ func (a *ACLM) listenTokenCheck() {
 
 			cacheDeviceID := getDeviceID(userID, token)
 
-			err := a.ch.Publish("", d.ReplyTo, false, false, amqp.Publishing{
+			err = a.ch.Publish("", d.ReplyTo, false, false, amqp.Publishing{
 				ContentType:   "text/plain",
 				CorrelationId: d.CorrelationId,
 				Body:          []byte(cacheDeviceID),

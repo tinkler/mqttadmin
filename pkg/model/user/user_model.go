@@ -14,7 +14,7 @@ func addRole(u *User, role *role.Role) error {
 		return status.New(400, "role is nil or role id is empty")
 	}
 	if role.ID == "" {
-		if err := db.DB().First(role).Error; err != nil {
+		if err := db.DB().Where("name = ?", role.Name).First(role).Error; err != nil {
 			return err
 		}
 	}
@@ -29,7 +29,7 @@ func removeRole(u *User, role *role.Role) error {
 		return status.New(400, "role is nil or role id is empty")
 	}
 	if role.ID == "" {
-		if err := db.DB().First(role).Error; err != nil {
+		if err := db.DB().Where("name = ?", role.Name).First(role).Error; err != nil {
 			return err
 		}
 	}

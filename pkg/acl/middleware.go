@@ -74,13 +74,11 @@ func GetUserID(ctx context.Context) string {
 }
 
 func AddRole(userID string, roleID ...string) error {
-	_, err := qm.Publish(QueueRoleAdd, userID+":"+strings.Join(roleID, ","))
-	return err
+	return qm.Publish(QueueRoleAdd, userID+":"+strings.Join(roleID, ","))
 }
 
 func RemoveRole(userID string, roleID ...string) error {
-	_, err := qm.Publish(QueueRoleRemove, userID+":"+strings.Join(roleID, ","))
-	return err
+	return qm.Publish(QueueRoleRemove, userID+":"+strings.Join(roleID, ","))
 }
 
 type AuthConfig struct {

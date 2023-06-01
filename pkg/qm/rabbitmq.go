@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
+	"github.com/tinkler/mqttadmin/pkg/logger"
 	"github.com/tinkler/mqttadmin/pkg/rabbitmq"
 )
 
@@ -14,13 +15,65 @@ type RabbitMQ struct {
 	channels map[string]*amqp.Channel
 }
 
-func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
+func (d *RabbitMQ) Publish(channel string, message string) error {
 	d.Lock()
 	defer d.Unlock()
 	if _, ok := d.channels[channel]; !ok {
 		ch, err := rabbitmq.AmqpChannel()
 		if err != nil {
-			return "", err
+			logger.Error(err)
+			return ErrPublish
+		}
+		d.channels[channel] = ch
+	}
+	ch := d.channels[channel]
+
+	err := ch.Confirm(false)
+	if err != nil {
+		logger.Error(err)
+		return ErrPublish
+	}
+	p := amqp.Publishing{
+		ContentType: "text/plain",
+		Body:        []byte(message),
+	}
+	err = ch.Publish(
+		"",      // exchange
+		channel, // routing key
+		false,   // mandatory
+		false,   // immediate
+		p,
+	)
+	if err != nil {
+		logger.Error(err)
+		return ErrPublish
+	}
+
+	acks := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+
+	for {
+		select {
+		case ack := <-acks:
+			if ack.Ack {
+				return nil
+			} else {
+				continue
+			}
+		case <-time.NewTimer(PublishTimeout).C:
+			logger.Error("Processing timeout")
+			return errors.New("processing timeout")
+		}
+	}
+}
+
+func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, error) {
+	d.Lock()
+	defer d.Unlock()
+	if _, ok := d.channels[channel]; !ok {
+		ch, err := rabbitmq.AmqpChannel()
+		if err != nil {
+			logger.Error(err)
+			return "", ErrPublish
 		}
 		d.channels[channel] = ch
 	}
@@ -34,8 +87,12 @@ func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
 		CorrelationId: correlationId,
 		MessageId:     messageId,
 	}
-	acks := ch.NotifyPublish(make(chan amqp.Confirmation))
-	err := ch.Publish(
+	err := ch.Confirm(false)
+	if err != nil {
+		logger.Error(err)
+		return "", ErrPublish
+	}
+	err = ch.Publish(
 		"",      // exchange
 		channel, // routing key
 		false,   // mandatory
@@ -43,7 +100,8 @@ func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
 		p,
 	)
 	if err != nil {
-		return "", err
+		logger.Error(err)
+		return "", ErrPublish
 	}
 
 	channelReplyQueue, err := ch.QueueDeclare(
@@ -55,7 +113,8 @@ func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
 		nil,              // arguments
 	)
 	if err != nil {
-		return "", err
+		logger.Error(err)
+		return "", ErrPublish
 	}
 
 	consumer := channel + "-consumer"
@@ -69,7 +128,8 @@ func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
 		nil,                    // Arguments
 	)
 	if err != nil {
-		return "", err
+		logger.Error(err)
+		return "", ErrPublish
 	}
 	defer ch.Cancel(consumer, false)
 
@@ -86,12 +146,8 @@ func (d *RabbitMQ) Publish(channel string, message string) (string, error) {
 					return string(msg.Body), nil
 				}
 			}
-		case ack := <-acks:
-			if ack.Ack {
-				return "", nil
-			}
-			return "", errors.New("processing failed")
-		case <-time.NewTimer(time.Second * 5).C:
+		case <-time.NewTimer(PublishTimeout).C:
+			logger.Error("Processing timeout")
 			return "", errors.New("processing timeout")
 		}
 	}

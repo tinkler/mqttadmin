@@ -201,56 +201,6 @@ export class UserProfile {
 }
 
 
-export interface UserRole {
-	
-	id: string;
-	
-	user: User;
-	
-	role: Role;
-	
-	
-	save(): Promise<void>;
-	
-}
-
-export class UserRole {
-	
-	id: string = "";
-	
-	user: User = new User(this.http);
-	
-	role: Role = new Role(this.http);
-	
-
-	constructor(
-		private http: _HttpClient,
-	){}
-
-	
-	save(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.http.post(`${modelUrlPrefix}/user/user_role/save`, { data: this, args: {  } }).subscribe({
-				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
-					if (res.code === 0) {
-						this.id = res.data.data['id'];
-						this.user = res.data.data['user'];
-						this.role = res.data.data['role'];
-						
-						resolve();
-					} else {
-						reject(res.message);
-					}
-				}, error: (err) => {
-					reject(err);
-				}
-			});
-		});
-	}
-	
-}
-
-
 /**
 * User is the user model
 */
@@ -431,6 +381,56 @@ export class User {
 						this.email = res.data.data['email'];
 						this.profiles = res.data.data['profiles'];
 						this.roles = res.data.data['roles'];
+						
+						resolve();
+					} else {
+						reject(res.message);
+					}
+				}, error: (err) => {
+					reject(err);
+				}
+			});
+		});
+	}
+	
+}
+
+
+export interface UserRole {
+	
+	id: string;
+	
+	user: User;
+	
+	role: Role;
+	
+	
+	save(): Promise<void>;
+	
+}
+
+export class UserRole {
+	
+	id: string = "";
+	
+	user: User = new User(this.http);
+	
+	role: Role = new Role(this.http);
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+	save(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.http.post(`${modelUrlPrefix}/user/user_role/save`, { data: this, args: {  } }).subscribe({
+				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
+					if (res.code === 0) {
+						this.id = res.data.data['id'];
+						this.user = res.data.data['user'];
+						this.role = res.data.data['role'];
 						
 						resolve();
 					} else {

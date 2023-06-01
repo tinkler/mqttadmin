@@ -3,15 +3,15 @@ package route
 
 func init() {
 	
-	routePathMap["/user/auth/signin"] = "pkg/model/user/auth.go:31"
-	routePathMap["/user/auth/quick-signin"] = "pkg/model/user/auth.go:69"
-	routePathMap["/user/auth/signup"] = "pkg/model/user/auth.go:96"
+	routePathMap["/user/auth/signin"] = "pkg/model/user/auth.go:32"
+	routePathMap["/user/auth/quick-signin"] = "pkg/model/user/auth.go:70"
+	routePathMap["/user/auth/signup"] = "pkg/model/user/auth.go:97"
 	routePathMap["/user/user_profile/save"] = "pkg/model/user/user_profile.go:11"
-	routePathMap["/user/user_role/save"] = "pkg/model/user/user_role.go:21"
 	routePathMap["/user/user/save"] = "pkg/model/user/user.go:31"
 	routePathMap["/user/user/add-role"] = "pkg/model/user/user.go:39"
 	routePathMap["/user/user/remove-role"] = "pkg/model/user/user.go:46"
 	routePathMap["/user/user/get"] = "pkg/model/user/user.go:55"
 	routePathMap["/user/user/get-roles"] = "pkg/model/user/user.go:78"
+	routePathMap["/user/user_role/save"] = "pkg/model/user/user_role.go:21"
 }
 

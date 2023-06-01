@@ -88,7 +88,9 @@ func checkYaml() {
 		if code.Typ == "" {
 			panic("genConf.Codes.Typ is empty")
 		}
-		if code.Typ != "chi_route" && code.Typ != "ts" && code.Typ != "dart" && code.Typ != "swift" && code.Typ != "angular_delon" {
+		if code.Typ != "chi_route" && code.Typ != "ts" && code.Typ != "dart" &&
+			code.Typ != "swift" && code.Typ != "angular_delon" &&
+			code.Typ != "proto" && code.Typ != "gsrv" {
 			panic("genConf.Codes.Typ is invalid")
 		}
 		if code.OutDir == "" {

@@ -14,7 +14,7 @@ type Role struct {
 }
 
 func (r *Role) TableName() string {
-	return "v1.role"
+	return "authv1.role"
 }
 
 func (r *Role) Save(ctx context.Context) error {

@@ -8,17 +8,29 @@ import (
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"regexp"
 	"strings"
+)
+
+type MethodType uint8
+
+const (
+	MT_NORMAL MethodType = iota
+	MT_S2C
+	MT_C2S
+	MT_BIDI
 )
 
 type Field struct {
 	Name     string
 	Type     string
 	Comments []string
+	Options  map[string]string
 }
 
 type Method struct {
 	Name      string
+	Type      MethodType
 	Comments  []string
 	Args      []Field
 	Rets      []Field
@@ -31,6 +43,7 @@ type Struct struct {
 	Comments []string
 	Fields   []Field
 	Methods  []Method
+	Options  map[string]string
 }
 
 type Package struct {
@@ -69,6 +82,8 @@ func toField(t ast.Expr) (f *Field) {
 	}
 	return
 }
+
+var methodTypeRe = regexp.MustCompile(`@stream\((\w+)\)`)
 
 // Path is the path of the package
 // modulePath is the name of the module which the package belongs to
@@ -183,9 +198,17 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 									continue
 								}
 								if strings.Contains(rf.Type, "context.Context") {
+									m.Type = MT_NORMAL
 									foundContext = true
 									continue
 								}
+								if strings.Contains(rf.Type, "gs.NullStream") ||
+									strings.Contains(rf.Type, "gs.Stream") {
+									m.Type = MT_BIDI // default to MT_BIDI but modified by @stream
+									foundContext = true
+									continue
+								}
+
 								for _, n := range f.Names {
 									rf.Name = n.Name
 								}
@@ -219,8 +242,27 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 								continue
 							}
 							if x.Doc != nil {
+								hasIgnoreTag := false
 								for _, c := range x.Doc.List {
 									m.Comments = append(m.Comments, strings.TrimSpace(strings.TrimPrefix(c.Text, "//")))
+									if strings.Contains(c.Text, "@ignore") {
+										hasIgnoreTag = true
+									} else if strings.Contains(c.Text, "@stream") {
+										match := methodTypeRe.FindStringSubmatch(c.Text)
+										if len(match) >= 2 {
+											switch strings.ToLower(match[1]) {
+											case "s2c", "server2client":
+												m.Type = MT_S2C
+											case "c2s", "client2server":
+												m.Type = MT_C2S
+											case "bidi", "bidirectional":
+												m.Type = MT_BIDI
+											}
+										}
+									}
+								}
+								if hasIgnoreTag {
+									continue
 								}
 							}
 							pkg.Structs[i].Methods = append(pkg.Structs[i].Methods, m)

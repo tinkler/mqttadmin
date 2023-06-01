@@ -4,5 +4,6 @@ package route
 func init() {
 	
 	routePathMap["/page/page/fetch-user"] = "pkg/model/page/page.go:15"
+	routePathMap["/page/page_row/gen-row"] = "pkg/model/page/row.go:15"
 }
 

@@ -58,5 +58,25 @@ export class Page {
 }
 
 
+export interface PageRow {
+	
+	rowNo: number;
+	
+	
+}
+
+export class PageRow {
+	
+	rowNo: number = 0;
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+}
+
+
 
 

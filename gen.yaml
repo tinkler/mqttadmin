@@ -6,3 +6,7 @@ codes:
     out_dir: ./static/dart/model/mqtt/
   - typ: angular_delon
     out_dir: ./static/angular_delon/mqtt
+  - typ: proto
+    out_dir: ./api/proto
+  - typ: gsrv
+    out_dir: ./pkg/gsrv

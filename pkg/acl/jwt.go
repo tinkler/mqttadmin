@@ -203,7 +203,7 @@ func CheckDeviceToken(ctx context.Context, deviceToken string, tokenStr string) 
 			if Aclm().mode == AM_SERVER {
 				cacheDeviceID = getDeviceID(auth.claims.UserID, tokenStr[:10])
 			} else {
-				cacheDeviceID, err = qm.Publish(QueueTokenCheck, auth.claims.UserID+":"+tokenStr[:10])
+				cacheDeviceID, err = qm.PublishAndReceive(QueueTokenCheck, auth.claims.UserID+":"+tokenStr[:10])
 				if err != nil {
 					logger.Error(err)
 					return ctx, errz.ErrInternal(err)
@@ -236,7 +236,7 @@ func checkJwtToken(ctx context.Context, tokenStr string) (context.Context, error
 	if Aclm().mode == AM_SERVER {
 		cacheDeviceID = getDeviceID(auth.claims.UserID, tokenStr[:10])
 	} else {
-		cacheDeviceID, err = qm.Publish(QueueTokenCheck, auth.claims.UserID+":"+tokenStr[:10])
+		cacheDeviceID, err = qm.PublishAndReceive(QueueTokenCheck, auth.claims.UserID+":"+tokenStr[:10])
 		if err != nil {
 			return ctx, errz.ErrInternal(err)
 		}

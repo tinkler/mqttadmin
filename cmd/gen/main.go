@@ -85,7 +85,16 @@ func beforeWatch(dir string, modulePath string, codes []*gen.GenCodeConf) (cache
 				if err != nil {
 					log.Fatal(err)
 				}
-
+			case "proto":
+				err = parser.GenerateProtoFile(c.OutDir, modulePath, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
+			case "gsrv":
+				err = parser.GenerateGsrv(c.OutDir, modulePath, pkg, cache)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	}
@@ -178,6 +187,16 @@ func main() {
 							}
 						case "angular_delon":
 							err = parser.GenerateTSAngularDelonCode(c.OutDir, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "proto":
+							err = parser.GenerateProtoFile(c.OutDir, modulePath, pkg, pkgs)
+							if err != nil {
+								log.Fatal(err)
+							}
+						case "gsrv":
+							err = parser.GenerateGsrv(c.OutDir, modulePath, pkg, pkgs)
 							if err != nil {
 								log.Fatal(err)
 							}

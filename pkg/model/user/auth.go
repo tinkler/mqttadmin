@@ -8,6 +8,7 @@ import (
 	"github.com/tinkler/mqttadmin/errz"
 	"github.com/tinkler/mqttadmin/pkg/acl"
 	"github.com/tinkler/mqttadmin/pkg/db"
+	"github.com/tinkler/mqttadmin/pkg/model/role"
 	"github.com/tinkler/mqttadmin/pkg/status"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ type Auth struct {
 }
 
 func (a *Auth) TableName() string {
-	return "v1.user"
+	return "authv1.user"
 }
 
 // Signin sign in with username and password
@@ -95,15 +96,15 @@ func (a *Auth) QuickSignin(ctx context.Context) error {
 
 func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 	if a.Username == "" {
-		return nil, status.Ok("username is empty")
+		return nil, status.OkCn("username is empty", "用户名不能为空")
 	}
 	if a.Password == "" {
-		return nil, status.Ok("password is empty")
+		return nil, status.OkCn("password is empty", "密码不能为空")
 	}
 
 	se := db.DB().Where("username = ?", a.Username).First(&Auth{})
 	if se.Error == nil {
-		return nil, status.Ok(ErrMsgNameAreadyExist)
+		return nil, status.OkCn(ErrMsgNameAreadyExist, "用户名已存在")
 	}
 	if !errors.Is(gorm.ErrRecordNotFound, se.Error) {
 		return nil, se.Error
@@ -138,6 +139,12 @@ func (a *Auth) Signup(ctx context.Context) (*Auth, error) {
 	acl.SetDeviceRemoveFlag(r.ID, r.DeviceToken)
 
 	u := &User{ID: r.ID}
+	// new user must add role user
+	err = addRole(u, &role.Role{Name: acl.RoleUser})
+	if err != nil {
+		return nil, err
+	}
+
 	err = u.GetRoles(ctx)
 	if err != nil {
 		return nil, err

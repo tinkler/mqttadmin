@@ -67,4 +67,31 @@ class Page {
 	}
 }
 
+class PageRow {
+	
+	int rowNo = 0;
+	
+	
+	PageRow();
+
+	assign(PageRow other) {
+		
+		rowNo = other.rowNo;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"row_no": rowNo,
+			
+		};
+	}
+	PageRow.fromJson(Map<String, dynamic> json) {
+		
+		rowNo = json["row_no"];
+		
+	}
+}
+
 

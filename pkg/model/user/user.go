@@ -16,7 +16,7 @@ type User struct {
 	Username string
 	Email    string
 	Profiles []*UserProfile `json:",omitempty" gorm:"-"`
-	Roles    []*role.Role   `gorm:"many2many:v1.user_role;"`
+	Roles    []*role.Role   `gorm:"many2many:authv1.user_role;"`
 }
 
 func NewUser() *User {
@@ -24,7 +24,7 @@ func NewUser() *User {
 }
 
 func (u *User) TableName() string {
-	return "v1.user"
+	return "authv1.user"
 }
 
 // Save saves the user to the database
@@ -69,7 +69,7 @@ func (u *User) Get(ctx context.Context) error {
 		if u.ID == "" {
 			return status.StatusInternalServer()
 		}
-		return db.DB().Where("id = ?", u.ID).First(u).Error
+		return db.DB().First(u).Error
 	}
 	return status.StatusUnauthorized()
 }

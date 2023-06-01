@@ -165,63 +165,6 @@ class UserProfile {
 	}
 }
 
-class UserRole {
-	
-	String id = "";
-	
-	User? user;
-	
-	$role.Role? role;
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_role/save', data: {
-			"data": toJson(),
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = UserRole.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	UserRole();
-
-	assign(UserRole other) {
-		
-		id = other.id;
-		
-		user = other.user;
-		
-		role = other.role;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"id": id,
-			
-			"user": user != null ? user!.toJson() : null,
-			
-			"role": role != null ? role!.toJson() : null,
-			
-		};
-	}
-	UserRole.fromJson(Map<String, dynamic> json) {
-		
-		id = json["id"];
-		
-		user = json["user"] == null ? User() : User.fromJson(json["user"]);
-		
-		role = json["role"] == null ? $role.Role() : $role.Role.fromJson(json["role"]);
-		
-	}
-}
-
 class User {
 	
 	String id = "";
@@ -358,6 +301,63 @@ class User {
 		profiles = json["profiles"] == null ? [] : (json["profiles"] as List<dynamic>).map((e) => UserProfile.fromJson(e)).toList();
 		
 		roles = json["roles"] == null ? [] : (json["roles"] as List<dynamic>).map((e) => $role.Role.fromJson(e)).toList();
+		
+	}
+}
+
+class UserRole {
+	
+	String id = "";
+	
+	User? user;
+	
+	$role.Role? role;
+	
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_role/save', data: {
+			"data": toJson(),
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = UserRole.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	UserRole();
+
+	assign(UserRole other) {
+		
+		id = other.id;
+		
+		user = other.user;
+		
+		role = other.role;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"id": id,
+			
+			"user": user != null ? user!.toJson() : null,
+			
+			"role": role != null ? role!.toJson() : null,
+			
+		};
+	}
+	UserRole.fromJson(Map<String, dynamic> json) {
+		
+		id = json["id"];
+		
+		user = json["user"] == null ? User() : User.fromJson(json["user"]);
+		
+		role = json["role"] == null ? $role.Role() : $role.Role.fromJson(json["role"]);
 		
 	}
 }
