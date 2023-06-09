@@ -114,7 +114,7 @@ func (a *ACLM) listenRoleAdd() {
 			}
 			SetAllDeviceRemoveFlag(userID)
 
-			if err := d.Ack(false); err != nil {
+			if err := d.Ack(true); err != nil {
 				logger.Error("Failed to ack role add message: %s", err)
 			}
 		}
@@ -166,7 +166,7 @@ func (a *ACLM) listenRoleRemove() {
 			}
 			SetAllDeviceRemoveFlag(userID)
 
-			err := d.Ack(false)
+			err := d.Ack(true)
 
 			if err != nil {
 				logger.Error("Failed to ack role add message: %s", err)

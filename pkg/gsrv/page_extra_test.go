@@ -2,6 +2,7 @@ package gsrv
 
 import (
 	"context"
+	"io"
 	"net"
 	"testing"
 	"time"
@@ -68,6 +69,9 @@ func TestPageSrvPageRowGenRow(t *testing.T) {
 			break
 		}
 		err := stream.Send(req.ToAny())
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			logger.Error(err)
 		}

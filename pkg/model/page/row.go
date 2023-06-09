@@ -5,6 +5,8 @@ import (
 
 	"github.com/tinkler/mqttadmin/pkg/gs"
 	"github.com/tinkler/mqttadmin/pkg/logger"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type PageRow struct {
@@ -24,6 +26,9 @@ func (m *PageRow) GenRow(stream gs.NullStream) error {
 			return err
 		}
 		m.RowNo++
+		if m.RowNo == 10 {
+			return status.New(codes.Canceled, "reach 10").Err()
+		}
 		err = stream.Send(nil)
 		if err != nil {
 			logger.Error(err)

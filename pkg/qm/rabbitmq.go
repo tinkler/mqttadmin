@@ -51,17 +51,24 @@ func (d *RabbitMQ) Publish(channel string, message string) error {
 
 	acks := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
 
+	timeout := time.NewTimer(PublishTimeout)
 	for {
 		select {
-		case ack := <-acks:
+		case ack, ok := <-acks:
+			if !ok {
+				logger.Error("ask channel closed")
+				return errors.New("ask channel closed")
+			}
 			if ack.Ack {
 				return nil
 			} else {
 				continue
 			}
-		case <-time.NewTimer(PublishTimeout).C:
+		case <-timeout.C:
 			logger.Error("Processing timeout")
 			return errors.New("processing timeout")
+		default:
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
 }
@@ -133,9 +140,14 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 	}
 	defer ch.Cancel(consumer, false)
 
+	timeout := time.NewTimer(PublishTimeout)
 	for {
 		select {
-		case msg := <-msgs:
+		case msg, ok := <-msgs:
+			if !ok {
+				logger.Error("replay channel closed")
+				return "", errors.New("replay channel closed")
+			}
 			// Wait for the response
 			if msg.CorrelationId == "" {
 				// Ignore messages that don't have a correlation ID set
@@ -146,12 +158,13 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 					return string(msg.Body), nil
 				}
 			}
-		case <-time.NewTimer(PublishTimeout).C:
+		case <-timeout.C:
 			logger.Error("Processing timeout")
 			return "", errors.New("processing timeout")
+		default:
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
-
 }
 
 func (d *RabbitMQ) Close() error {
