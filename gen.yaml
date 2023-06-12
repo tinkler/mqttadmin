@@ -1,12 +1,23 @@
+# The path where are the models located
+# 模型定义目录
 dir: ./pkg/model
+# Generate configuration
+# 生成配置
 codes:
+  # Genertate route files for Chi framework
   - typ: chi_route
     out_dir: ./pkg/route
+  # Generate dart files for Flutter base on Dio
   - typ: dart
     out_dir: ./static/dart/model/mqtt/
+  - typ: ts
+    out_dir: ./static/ts
+  # Generate service files for Delon base on Angular
   - typ: angular_delon
     out_dir: ./static/angular_delon/mqtt
+  # Generate gRPC protocol buffer files and use protoc to generate its corresponding go files in the root of the current project
   - typ: proto
     out_dir: ./api/proto
+  # Generate server structs that implements services modified by proto
   - typ: gsrv
     out_dir: ./pkg/gsrv

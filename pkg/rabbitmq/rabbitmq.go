@@ -24,7 +24,9 @@ func AmqpConn() *amqp.Connection {
 }
 
 func AmqpClose() {
-	amqpConnection.Close()
+	if amqpConnection != nil {
+		amqpConnection.Close()
+	}
 }
 
 func AmqpChannel() (*amqp.Channel, error) {

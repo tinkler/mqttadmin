@@ -94,6 +94,7 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 		CorrelationId: correlationId,
 		MessageId:     messageId,
 	}
+
 	err := ch.Confirm(false)
 	if err != nil {
 		logger.Error(err)
@@ -138,7 +139,6 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 		logger.Error(err)
 		return "", ErrPublish
 	}
-	defer ch.Cancel(consumer, false)
 
 	timeout := time.NewTimer(PublishTimeout)
 	for {
