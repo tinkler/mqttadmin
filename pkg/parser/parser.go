@@ -303,6 +303,8 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 			})
 		}
 	}
+	// sort its structs and methods of each struct make less generation change.
+	pkg.Sort()
 	return pkg, nil
 }
 
