@@ -107,7 +107,9 @@ func (a *ACLM) listenRoleAdd() {
 					continue
 				}
 				e := <-ec
-				logger.Error(e)
+				if e != nil {
+					logger.Error(e)
+				}
 				close(closed)
 				time.Sleep(rabbitmq.RetryDuration)
 				a.listenRoleAdd()
@@ -197,7 +199,10 @@ func (a *ACLM) listenRoleRemove() {
 					continue
 				}
 				e := <-ec
-				logger.Error(e)
+				if e != nil {
+					logger.Error(e)
+				}
+
 				close(closed)
 				time.Sleep(rabbitmq.RetryDuration)
 				a.listenRoleRemove()
@@ -261,7 +266,9 @@ func (a *ACLM) listenTokenCheck() {
 					continue
 				}
 				e := <-ec
-				logger.Error(e)
+				if e != nil {
+					logger.Error(e)
+				}
 				close(closed)
 				time.Sleep(rabbitmq.RetryDuration)
 				a.listenTokenCheck()
