@@ -2,7 +2,7 @@
 import { User } from './user.model';
 
 import { Injectable } from '@angular/core';
-import { Page, PageRow,  } from './page.model';
+import { Page, PageRow, Chapter,  } from './page.model';
 import { UserService  } from './user.service';
 
 import { _HttpClient } from '@delon/theme';
@@ -24,5 +24,8 @@ export class PageService {
 	}
 	newPageRow(): PageRow {
 		return new PageRow(this.http);
+	}
+	newChapter(): Chapter {
+		return new Chapter(this.http);
 	}
 }

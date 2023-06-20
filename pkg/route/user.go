@@ -13,6 +13,24 @@ import (
 func RoutesUser(m chi.Router) {
 	m.Route("/user", func(r chi.Router) {
 		
+		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
+			m := Model[*user.UserProfile, any]{}
+			err := sjson.Bind(r, &m)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			res := Res[*user.UserProfile,any]{Data:m.Data}
+			err = m.Data.Save(r.Context())
+			
+			if status.HttpError(w, err) {
+				return
+			}
+			if sjson.HttpWrite(w, res) {
+				return
+			}
+
+		})
 		r.Post("/auth/signin", func(w http.ResponseWriter, r *http.Request) {
 			m := Model[*user.Auth, any]{}
 			err := sjson.Bind(r, &m)
@@ -58,24 +76,6 @@ func RoutesUser(m chi.Router) {
 			}
 			res := Res[*user.Auth,*user.Auth]{Data:m.Data}
 			res.Resp, err = m.Data.Signup(r.Context())
-			
-			if status.HttpError(w, err) {
-				return
-			}
-			if sjson.HttpWrite(w, res) {
-				return
-			}
-
-		})
-		r.Post("/user_profile/save", func(w http.ResponseWriter, r *http.Request) {
-			m := Model[*user.UserProfile, any]{}
-			err := sjson.Bind(r, &m)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			res := Res[*user.UserProfile,any]{Data:m.Data}
-			err = m.Data.Save(r.Context())
 			
 			if status.HttpError(w, err) {
 				return

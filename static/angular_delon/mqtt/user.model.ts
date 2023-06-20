@@ -5,6 +5,46 @@ import { Role } from './role.model';
 import { _HttpClient } from '@delon/theme';
 import { modelUrlPrefix  } from './const';
 
+export interface UserProfile {
+	
+	phoneNo: string;
+	
+	
+	save(): Promise<void>;
+	
+}
+
+export class UserProfile {
+	
+	phoneNo: string = "";
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+	save(): Promise<void> {
+		return new Promise((resolve, reject) => {
+			this.http.post(`${modelUrlPrefix}/user/user_profile/save`, { data: this, args: {  } }).subscribe({
+				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
+					if (res.code === 0) {
+						this.phoneNo = res.data.data['phone_no'];
+						
+						resolve();
+					} else {
+						reject(res.message);
+					}
+				}, error: (err) => {
+					reject(err);
+				}
+			});
+		});
+	}
+	
+}
+
+
 export interface Auth {
 	
 	/**
@@ -148,46 +188,6 @@ export class Auth {
 						const resp: Auth = new Auth(this.http);resp.id = res.data.resp['id'];resp.deviceToken = res.data.resp['device_token'];resp.username = res.data.resp['username'];resp.password = res.data.resp['password'];resp.token = res.data.resp['token'];
 						resolve(resp);
 						
-					} else {
-						reject(res.message);
-					}
-				}, error: (err) => {
-					reject(err);
-				}
-			});
-		});
-	}
-	
-}
-
-
-export interface UserProfile {
-	
-	phoneNo: string;
-	
-	
-	save(): Promise<void>;
-	
-}
-
-export class UserProfile {
-	
-	phoneNo: string = "";
-	
-
-	constructor(
-		private http: _HttpClient,
-	){}
-
-	
-	save(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this.http.post(`${modelUrlPrefix}/user/user_profile/save`, { data: this, args: {  } }).subscribe({
-				next: (res: { code: number; data: { data: any, resp: {} }, message: string } ) => {
-					if (res.code === 0) {
-						this.phoneNo = res.data.data['phone_no'];
-						
-						resolve();
 					} else {
 						reject(res.message);
 					}

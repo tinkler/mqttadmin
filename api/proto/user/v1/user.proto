@@ -8,16 +8,16 @@ package user.v1;
 import "google/protobuf/any.proto";
 import "role/v1/role.proto";
 
+message UserProfile {
+	string phone_no = 1;
+}
+
 message Auth {
 	string id = 1;
 	string device_token = 2;
 	string username = 3;
 	string password = 4;
 	string token = 5;
-}
-
-message UserProfile {
-	string phone_no = 1;
 }
 
 message User {
@@ -35,10 +35,10 @@ message UserRole {
 }
 
 service UserGsrv {
+	rpc UserProfileSave (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc AuthSignin (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc AuthQuickSignin (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc AuthSignup (google.protobuf.Any) returns (google.protobuf.Any);
-	rpc UserProfileSave (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc UserSave (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc UserAddRole (google.protobuf.Any) returns (google.protobuf.Any);
 	rpc UserRemoveRole (google.protobuf.Any) returns (google.protobuf.Any);

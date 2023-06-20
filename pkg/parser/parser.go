@@ -8,8 +8,11 @@ import (
 	"go/parser"
 	"go/token"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/tinkler/mqttadmin/pkg/jsonz/sjson"
 )
 
 type MethodType uint8
@@ -23,6 +26,7 @@ const (
 
 type Field struct {
 	Name     string
+	JSON     string
 	Type     string
 	Comments []string
 	Options  map[string]string
@@ -78,12 +82,21 @@ func toField(t ast.Expr) (f *Field) {
 		if k == nil || v == nil {
 			return
 		}
-		f.Type = "map[" + toField(x.Key).Type + "]" + toField(x.Value).Type
+		f = &Field{
+			Type: "map[" + k.Type + "]" + v.Type,
+		}
+	case *ast.IndexExpr:
+		f = toField(x.Index)
+	case *ast.InterfaceType:
+		f = &Field{
+			Type: "interface",
+		}
 	}
 	return
 }
 
 var methodTypeRe = regexp.MustCompile(`@stream\((\w+)\)`)
+var mapTypeRe = regexp.MustCompile(`^map\[(string|int)\]\*?(.+)$`)
 
 // Path is the path of the package
 // modulePath is the name of the module which the package belongs to
@@ -151,6 +164,17 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 									if field.Name == "" {
 										continue
 									}
+									if f.Tag != nil {
+										tag, _ := parseTag(reflect.StructTag(strings.Trim(f.Tag.Value, "`")).Get("json"))
+										if tag != "" {
+											field.JSON = tag
+										} else {
+											field.JSON = sjson.ToSnackedName(field.Name)
+										}
+									} else {
+										field.JSON = sjson.ToSnackedName(field.Name)
+									}
+
 									if f.Comment != nil {
 										for _, c := range f.Comment.List {
 											field.Comments = append(field.Comments, strings.TrimSpace(strings.TrimPrefix(c.Text, "//")))
@@ -202,11 +226,13 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 									foundContext = true
 									continue
 								}
-								if strings.Contains(rf.Type, "gs.NullStream") ||
-									strings.Contains(rf.Type, "gs.Stream") {
+								if isNullStream := strings.Contains(rf.Type, "gs.NullStream"); isNullStream ||
+									isStream(f.Type) {
 									m.Type = MT_BIDI // default to MT_BIDI but modified by @stream
 									foundContext = true
-									continue
+									if isNullStream {
+										continue
+									}
 								}
 
 								for _, n := range f.Names {
@@ -239,6 +265,10 @@ func ParsePackage(path string, modulePath string) (*Package, error) {
 								}
 							}
 							if !foundError {
+								continue
+							}
+							if m.Type != MT_NORMAL && len(m.Rets) != 0 {
+								// stream only returns error
 								continue
 							}
 							if x.Doc != nil {
@@ -283,4 +313,14 @@ func FindStruct(pkg *Package, name string) *Struct {
 		}
 	}
 	return nil
+}
+
+func isStream(exp ast.Expr) bool {
+	if ie, ok := exp.(*ast.IndexExpr); ok {
+		rf := toField(ie.X)
+		if rf.Type == "gs.Stream" {
+			return true
+		}
+	}
+	return false
 }

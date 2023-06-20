@@ -52,23 +52,17 @@ export function Permission(): Permission {
 	
 	return {
 		
-		
-
 		id: 0,
 		
-
 		name: "",
 		
-
 		
-
 		savePermission(): Promise<void> {
 			
 			return postPermission(this, 'save-permission', {  });
 			
 		},
 		
-
 		deletePermission(): Promise<void> {
 			
 			return postPermission(this, 'delete-permission', {  });
@@ -84,7 +78,7 @@ export function Permission(): Permission {
 
 function postPermission(permission: Permission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/permission/permission/${method}`, true);
+	xhr.open("POST", `/permission//permission/permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
 	return new Promise((resolve, reject) => {
 		xhr.onload = () => {
@@ -105,26 +99,19 @@ export function RolePermission(): RolePermission {
 	
 	return {
 		
-		
-
 		id: 0,
 		
-
 		role: Role(),
 		
-
 		permission: Permission(),
 		
-
 		
-
 		savePermission(): Promise<void> {
 			
 			return postRolePermission(this, 'save-permission', {  });
 			
 		},
 		
-
 		deletePermission(): Promise<void> {
 			
 			return postRolePermission(this, 'delete-permission', {  });
@@ -140,7 +127,7 @@ export function RolePermission(): RolePermission {
 
 function postRolePermission(rolePermission: RolePermission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/permission/role_permission/${method}`, true);
+	xhr.open("POST", `/permission//role_permission/role_permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
 	return new Promise((resolve, reject) => {
 		xhr.onload = () => {
@@ -161,26 +148,19 @@ export function UserPermission(): UserPermission {
 	
 	return {
 		
-		
-
 		id: 0,
 		
-
 		user: User(),
 		
-
 		permission: Permission(),
 		
-
 		
-
 		savePermission(): Promise<void> {
 			
 			return postUserPermission(this, 'save-permission', {  });
 			
 		},
 		
-
 		deletePermission(): Promise<void> {
 			
 			return postUserPermission(this, 'delete-permission', {  });
@@ -196,7 +176,7 @@ export function UserPermission(): UserPermission {
 
 function postUserPermission(userPermission: UserPermission, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/permission/user_permission/${method}`, true);
+	xhr.open("POST", `/permission//user_permission/user_permission/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
 	return new Promise((resolve, reject) => {
 		xhr.onload = () => {

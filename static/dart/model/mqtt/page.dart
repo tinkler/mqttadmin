@@ -71,12 +71,20 @@ class PageRow {
 	
 	int rowNo = 0;
 	
+	map[string]Chapter chapters = map[string]Chapter();
+	
+	map[string]interface option = map[string]interface();
+	
 	
 	PageRow();
 
 	assign(PageRow other) {
 		
 		rowNo = other.rowNo;
+		
+		chapters = other.chapters;
+		
+		option = other.option;
 		
 	}
 
@@ -85,11 +93,54 @@ class PageRow {
 			
 			"row_no": rowNo,
 			
+			"chapters": chapterschapters.toJson(),
+			
+			"option": optionoption.toJson(),
+			
 		};
 	}
 	PageRow.fromJson(Map<String, dynamic> json) {
 		
 		rowNo = json["row_no"];
+		
+		chapters = json["chapters"].fromJson($s);
+		
+		option = json["option"].fromJson($s);
+		
+	}
+}
+
+class Chapter {
+	
+	int index = 0;
+	
+	String name = "";
+	
+	
+	Chapter();
+
+	assign(Chapter other) {
+		
+		index = other.index;
+		
+		name = other.name;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"index": index,
+			
+			"name": name,
+			
+		};
+	}
+	Chapter.fromJson(Map<String, dynamic> json) {
+		
+		index = json["index"];
+		
+		name = json["name"];
 		
 	}
 }

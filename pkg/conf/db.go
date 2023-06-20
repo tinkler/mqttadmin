@@ -6,7 +6,8 @@ import (
 )
 
 type DbConfig struct {
-	Dsn string `yaml:"dsn"`
+	Driver string `yaml:"driver"`
+	Dsn    string `yaml:"dsn"`
 }
 
 var (
@@ -17,9 +18,11 @@ var (
 func newDbConfig() *DbConfig {
 	dbOnce.Do(func() {
 		// Dsn database connection string:
+		driver := os.Getenv("DB_DRIVER")
 		dsn := os.Getenv("DB_DSN")
 		dbIns = &DbConfig{
-			Dsn: dsn,
+			Driver: driver,
+			Dsn:    dsn,
 		}
 
 	})

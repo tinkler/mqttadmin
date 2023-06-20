@@ -4,6 +4,47 @@ import './const.dart';
 import './role.dart' as $role show Role;
 
 
+class UserProfile {
+	
+	String phoneNo = "";
+	
+	Future<void> save(
+		
+	) async {
+		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
+			"data": toJson(),
+			"args": {  }
+		});
+		if (response.data['code'] == 0) {
+			var respModel = UserProfile.fromJson(response.data['data']['data']);
+			assign(respModel);
+			
+		}
+		
+	}
+	
+	UserProfile();
+
+	assign(UserProfile other) {
+		
+		phoneNo = other.phoneNo;
+		
+	}
+
+	Map<String, dynamic> toJson() {
+		return {
+			
+			"phone_no": phoneNo,
+			
+		};
+	}
+	UserProfile.fromJson(Map<String, dynamic> json) {
+		
+		phoneNo = json["phone_no"];
+		
+	}
+}
+
 class Auth {
 	
 	String id = "";
@@ -120,47 +161,6 @@ class Auth {
 		password = json["password"];
 		
 		token = json["token"];
-		
-	}
-}
-
-class UserProfile {
-	
-	String phoneNo = "";
-	
-	Future<void> save(
-		
-	) async {
-		var response = await D.instance.dio.post('$modelUrlPrefix/user/user_profile/save', data: {
-			"data": toJson(),
-			"args": {  }
-		});
-		if (response.data['code'] == 0) {
-			var respModel = UserProfile.fromJson(response.data['data']['data']);
-			assign(respModel);
-			
-		}
-		
-	}
-	
-	UserProfile();
-
-	assign(UserProfile other) {
-		
-		phoneNo = other.phoneNo;
-		
-	}
-
-	Map<String, dynamic> toJson() {
-		return {
-			
-			"phone_no": phoneNo,
-			
-		};
-	}
-	UserProfile.fromJson(Map<String, dynamic> json) {
-		
-		phoneNo = json["phone_no"];
 		
 	}
 }

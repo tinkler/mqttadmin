@@ -2,7 +2,6 @@ package qm
 
 import (
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -11,24 +10,17 @@ import (
 )
 
 type RabbitMQ struct {
-	sync.Mutex
-	channels map[string]*amqp.Channel
 }
 
 func (d *RabbitMQ) Publish(channel string, message string) error {
-	d.Lock()
-	defer d.Unlock()
-	if _, ok := d.channels[channel]; !ok {
-		ch, err := rabbitmq.AmqpChannel()
-		if err != nil {
-			logger.Error(err)
-			return ErrPublish
-		}
-		d.channels[channel] = ch
+	ch, err := rabbitmq.AmqpChannel()
+	if err != nil {
+		logger.Error(err)
+		return ErrPublish
 	}
-	ch := d.channels[channel]
+	defer ch.Close()
 
-	err := ch.Confirm(false)
+	err = ch.Confirm(false)
 	if err != nil {
 		logger.Error(err)
 		return ErrPublish
@@ -62,7 +54,8 @@ func (d *RabbitMQ) Publish(channel string, message string) error {
 			if ack.Ack {
 				return nil
 			} else {
-				continue
+				logger.Error("ack not checked")
+				return nil
 			}
 		case <-timeout.C:
 			logger.Error("Processing timeout")
@@ -74,17 +67,12 @@ func (d *RabbitMQ) Publish(channel string, message string) error {
 }
 
 func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, error) {
-	d.Lock()
-	defer d.Unlock()
-	if _, ok := d.channels[channel]; !ok {
-		ch, err := rabbitmq.AmqpChannel()
-		if err != nil {
-			logger.Error(err)
-			return "", ErrPublish
-		}
-		d.channels[channel] = ch
+	ch, err := rabbitmq.AmqpChannel()
+	if err != nil {
+		logger.Error(err)
+		return "", ErrPublish
 	}
-	ch := d.channels[channel]
+	defer ch.Close()
 	correlationId := channel + "-qm"
 	messageId := GetNextVal()
 	p := amqp.Publishing{
@@ -95,7 +83,7 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 		MessageId:     messageId,
 	}
 
-	err := ch.Confirm(false)
+	err = ch.Confirm(false)
 	if err != nil {
 		logger.Error(err)
 		return "", ErrPublish
@@ -168,16 +156,9 @@ func (d *RabbitMQ) PublishAndReceive(channel string, message string) (string, er
 }
 
 func (d *RabbitMQ) Close() error {
-	d.Lock()
-	defer d.Unlock()
-	for _, ch := range d.channels {
-		ch.Close()
-	}
 	return nil
 }
 
 func NewRabbitMQ() *RabbitMQ {
-	return &RabbitMQ{
-		channels: make(map[string]*amqp.Channel),
-	}
+	return &RabbitMQ{}
 }

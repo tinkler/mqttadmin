@@ -231,6 +231,7 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 	var (
 		usedDepStruct = make(map[string]map[string]bool)
 		hasMethods    bool
+		hasInterface  bool
 	)
 	for _, s := range pkg.Structs {
 		fields := s.Fields
@@ -241,6 +242,9 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 		}
 		for _, f := range fields {
 			typ := f.Type
+			if strings.Contains(typ, "interface") {
+				hasInterface = true
+			}
 		FIND:
 			typ = strings.TrimPrefix(typ, "*")
 			if _, isBt := tsTypeMap[typ]; !isBt {
@@ -298,6 +302,9 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 	if hasMethods {
 		protoFile.WriteString(fmt.Sprintln("import \"google/protobuf/any.proto\";"))
 	}
+	if hasInterface {
+		protoFile.WriteString(fmt.Sprintln("import \"google/protobuf/struct.proto\";"))
+	}
 
 	if len(usedDepStruct) > 0 {
 		for _, importName := range pkg.Imports {
@@ -314,8 +321,17 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 		for _, f := range s.Fields {
 			goType := strings.ReplaceAll(f.Type, "*", "")
 			isSlice := strings.HasPrefix(goType, "[]")
+			var (
+				isMap  = strings.HasPrefix(goType, "map")
+				mapKey string
+			)
+
 			if isSlice {
 				goType = strings.TrimPrefix(goType, "[]")
+			}
+			if isMap {
+				match := mapTypeRe.FindStringSubmatch(goType)
+				mapKey, goType = protoTypeMap[match[1]], match[2]
 			}
 			if buildinType, isBt := protoTypeMap[goType]; !isBt {
 				if s := FindStruct(pkg, goType); s != nil {
@@ -336,6 +352,12 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 
 			if isSlice {
 				goType = "repeated " + goType
+			}
+			if isMap {
+				if goType == "interface" {
+					goType = "google.protobuf.Value"
+				}
+				goType = "map<" + mapKey + "," + goType + ">"
 			}
 			protoFile.WriteString(fmt.Sprintf("\t%s %s = %d;\n", goType, sjson.ToSnackedName(f.Name), pp.GetSequence(sjson.ToSnackedName(s.Name), sjson.ToSnackedName(f.Name))))
 		}
@@ -379,9 +401,11 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 	defer f.Close()
 
 	var (
-		usedDepStruct    = make(map[string]map[string]bool)
-		hasMethods       bool
-		hasStreamMethods bool
+		usedDepStruct        = make(map[string]map[string]bool)
+		hasMethods           bool
+		hasStreamMethods     bool
+		hasNullStreamMethods bool
+		streamModels         = make(map[string]bool)
 	)
 	for _, s := range pkg.Structs {
 		var fields []Field
@@ -391,6 +415,11 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 				m.Type == MT_S2C ||
 				m.Type == MT_BIDI {
 				hasStreamMethods = true
+				if len(m.Args) > 0 {
+					streamModels[strings.Split(strings.TrimPrefix(m.Args[0].Type, "*"), ".")[0]] = true
+				} else {
+					hasNullStreamMethods = true
+				}
 			}
 			fields = append(fields, m.Args...)
 			fields = append(fields, m.Rets...)
@@ -439,19 +468,23 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 	}
 	f.WriteString(fmt.Sprintf("\t\"%s\"\n", pkg.ImportsMap[pkg.Name]))
 	f.WriteString(fmt.Sprintf("\tpb_%s_v1 \"%s/%s/v1\"\n", pkg.Name, modulePath, pkg.Name))
-	f.WriteString(fmt.Sprintln("\tanypb \"google.golang.org/protobuf/types/known/anypb\""))
-	if hasMethods {
+	if hasMethods && hasNullStreamMethods {
 		f.WriteString(fmt.Sprintln("\tstructpb \"google.golang.org/protobuf/types/known/structpb\""))
 	}
-	if hasStreamMethods {
+	if hasNullStreamMethods {
+		f.WriteString(fmt.Sprintln("\tanypb \"google.golang.org/protobuf/types/known/anypb\""))
 		f.WriteString(fmt.Sprintln("\t\"github.com/tinkler/mqttadmin/pkg/gs\""))
+	}
+	if hasStreamMethods {
 		f.WriteString(fmt.Sprintln("\t\"github.com/tinkler/mqttadmin/pkg/jsonz/sjson\""))
 	}
 
 	for _, importName := range pkg.Imports {
 		if _, used := usedDepStruct[importName]; used {
 			f.WriteString(fmt.Sprintf("\t\"%s\"\n", pkg.ImportsMap[importName]))
-			// f.WriteString(fmt.Sprintf("\tpb_%s_v1 \"%s/%s/v1\"\n", importName, modulePath, importName))
+			if streamModels[importName] {
+				f.WriteString(fmt.Sprintf("\tpb_%s_v1 \"%s/%s/v1\"\n", importName, modulePath, importName))
+			}
 		}
 	}
 
@@ -487,6 +520,35 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 			}
 			return goType
 		},
+		"newType": func(goType string) string {
+			var hasPointer bool
+			if strings.HasPrefix(goType, "*") {
+				hasPointer = true
+				goType = strings.TrimPrefix(goType, "*")
+			}
+			if _, isBt := protoTypeMap[goType]; isBt {
+				return goType
+			}
+			if s := FindStruct(pkg, goType); s != nil {
+				if hasPointer {
+					return "&" + pkg.Name + "." + goType + "{}"
+				}
+				return pkg.Name + "." + goType + "{}"
+			}
+			if dep != nil {
+				if nameSlice := strings.Split(goType, "."); len(nameSlice) > 1 {
+					if pkg, isDep := dep[nameSlice[0]]; isDep {
+						if s := FindStruct(pkg, nameSlice[1]); s != nil {
+							if hasPointer {
+								return "&" + pkg.Name + "." + s.Name + "{}"
+							}
+							return pkg.Name + "." + s.Name + "{}"
+						}
+					}
+				}
+			}
+			return goType
+		},
 		"toPbType": func(goType string) string {
 			ptrPrefix := ""
 			if strings.HasPrefix(goType, "*") {
@@ -503,7 +565,38 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 				if nameSlice := strings.Split(goType, "."); len(nameSlice) > 1 {
 					if pkg, isDep := dep[nameSlice[0]]; isDep {
 						if s := FindStruct(pkg, nameSlice[1]); s != nil {
-							return ptrPrefix + "pb_" + pkg.Name + "_v1." + s.Name + "." + goType
+							return ptrPrefix + "pb_" + pkg.Name + "_v1." + s.Name
+						}
+					}
+				}
+			}
+			return goType
+		},
+		"newPbType": func(goType string) string {
+			var hasPointer bool
+			if strings.HasPrefix(goType, "*") {
+				hasPointer = true
+				goType = strings.TrimPrefix(goType, "*")
+			}
+			if _, isBt := protoTypeMap[goType]; isBt {
+				if hasPointer {
+					return goType
+				}
+			}
+			if s := FindStruct(pkg, goType); s != nil {
+				if hasPointer {
+					return "&pb_" + pkg.Name + "_v1." + goType + "{}"
+				}
+				return "pb_" + pkg.Name + "_v1." + goType + "{}"
+			}
+			if dep != nil {
+				if nameSlice := strings.Split(goType, "."); len(nameSlice) > 1 {
+					if pkg, isDep := dep[nameSlice[0]]; isDep {
+						if s := FindStruct(pkg, nameSlice[1]); s != nil {
+							if hasPointer {
+								return "&pb_" + pkg.Name + "_v1." + s.Name + "{}"
+							}
+							return "pb_" + pkg.Name + "_v1." + s.Name + "{}"
 						}
 					}
 				}
@@ -558,8 +651,8 @@ func (u *{{$.Name}}Gsrv) {{$struct.Name}}{{.Name}}(ctx context.Context, in *anyp
 func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Context() context.Context {
 	return s.stream.Context()
 }
-{{if .Rets}}{{else}}func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Send(_ *gs.Null) error {
-	res := mrz.NewTypedRes[*pb_{{$.Name}}_v1.{{$struct.Name}}, *anypb.Any]()
+{{if .Rets}}{{else}}func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Send({{if .Args}}v {{(index .Args 0).Type | toType}}{{else}}_ *gs.Null{{end}}) error {
+	res := mrz.NewTypedRes[*pb_{{$.Name}}_v1.{{$struct.Name}}, {{if .Args}}{{(index .Args 0).Type | toPbType}}{{else}}*anypb.Any{{end}}]()
 	// data
 	res.Data = new(pb_{{$.Name}}_v1.{{$struct.Name}})
 	jd, err := sjson.Marshal(s.m)
@@ -571,23 +664,34 @@ func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Context() context.
 		return err
 	}
 	// resp
-	null := structpb.NewNullValue()
+	{{if .Args}}{{$arg := (index .Args 0)}}respByt, _ := sjson.Marshal(v)
+	newResp := {{$arg.Type | newPbType}}
+	err = sjson.Unmarshal(respByt, newResp)
+	if err != nil {
+		return err
+	}
+	res.Resp = newResp
+	{{else}}null := structpb.NewNullValue()
 	resp, _ := anypb.New(null)
-	res.Resp = resp
+	res.Resp = resp{{end}}
 	return s.stream.Send(res.ToAny())
 }
-func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Recv() (*gs.Null, error) {
+func (s *{{$.Name | toFulle}}{{$struct.Name}}{{.Name}}Stream) Recv() ({{if .Args}}{{(index .Args 0).Type | toType}}{{else}}*gs.Null{{end}}, error) {
 	in, err := s.stream.Recv()
 	if err != nil {
 		return nil, err
 	}
-	req := mrz.ToTypedModel[*pb_{{$.Name}}_v1.{{$struct.Name}}, *anypb.Any](in)
+	req := mrz.ToTypedModel[*pb_{{$.Name}}_v1.{{$struct.Name}}, {{if .Args}}{{(index .Args 0).Type | toPbType}}{{else}}*anypb.Any{{end}}](in)
 	jd, err := sjson.Marshal(req.Data)
 	if err != nil {
 		return nil, err
 	}
 	err = sjson.Unmarshal(jd, s.m)
-	return nil, err
+	{{if .Args}}{{$arg := (index .Args 0)}}argsByt, _ := sjson.Marshal(req.Args)
+	newArgs := {{$arg.Type | newType}}
+	err = sjson.Unmarshal(argsByt, newArgs)
+	return newArgs, err
+	{{else}}return nil, err{{end}}
 }
 {{end}}
 func (s *{{$.Name}}Gsrv) {{$struct.Name}}{{.Name}}(stream pb_{{$.Name}}_v1.{{$.Name | toFulle}}Gsrv_{{$struct.Name}}{{.Name}}Server) error {
@@ -741,7 +845,7 @@ func GenerateTSCode(path string, pkg *Package, dep map[string]*Package) error {
 
 // typescript template
 const tsModelTemplate = `{{$pkgName := .Name}}
-{{range .Structs}}
+{{range .Structs}}{{$struct := .}}
 {{range .Comments}}/**
 * {{.}}
 */
@@ -761,7 +865,7 @@ const tsModelTemplate = `{{$pkgName := .Name}}
 }
 {{end}}
 
-{{range .Structs}}{{$structName := .Name}}
+{{range .Structs}}{{$struct := .}}
 {{range .Comments}}/**
 * {{.}}
 */
@@ -774,7 +878,7 @@ const tsModelTemplate = `{{$pkgName := .Name}}
 		{{range .Methods}}{{if eq .Type 0}}
 		{{.Name | toCamel}}({{range $index,$arg := .Args}}{{$arg.Name | toCamel}}: {{$arg.Type | toType}}, {{end}}): {{if ge (len .Rets) 1}}Promise<{{$ret := (index .Rets 0)}}{{$ret.Type | toType}}> {{else}}Promise<void>{{end}} {
 			
-			return post{{$structName}}(this, '{{.Name | toMinus}}', { {{range $index,$arg := .Args}}{{$arg.Name | toCamel}}, {{end}} }){{if ge (len .Rets) 1}}.then((res: { data: any }) => res.data as {{$ret := (index .Rets 0)}}{{$ret.Type | toType}}){{end}};
+			return post{{$struct.Name}}(this, '{{.Name | toMinus}}', { {{range $index,$arg := .Args}}{{$arg.Name | toCamel}}, {{end}} }){{if ge (len .Rets) 1}}.then((res: { data: any }) => res.data as {{$ret := (index .Rets 0)}}{{$ret.Type | toType}}){{end}};
 			
 		},
 		{{end}}{{end}}
@@ -1179,7 +1283,7 @@ export class {{.Name | firstUpper}}Service {
 		{{end}}
 		) { }
 
-	{{range .Structs}}{{$structName := .Name}}{{$struct := .}}
+	{{range .Structs}}{{$struct := .}}
 	{{range .Comments}}/**
 	* {{.}}
 	*/
@@ -1382,7 +1486,6 @@ func GenerateDartCode(path string, pkg *Package, dep map[string]*Package) error 
 			return name + ".toJson()"
 		},
 		"fromJson": func(goType string, name string) string {
-			name = sjson.ToSnackedName(name)
 			goType = strings.ReplaceAll(goType, "*", "")
 			if typ := dartTypeMap[goType]; typ != "" {
 				return ""
@@ -1526,13 +1629,13 @@ class {{.Name}} {
 	Map<String, dynamic> toJson() {
 		return {
 			{{range .Fields}}
-			"{{.Name | toSnack}}": {{.Name | toCamel}}{{asToJson .Type (.Name | toCamel)}},
+			"{{.JSON}}": {{.Name | toCamel}}{{asToJson .Type (.Name | toCamel)}},
 			{{end}}
 		};
 	}
 	{{.Name}}.fromJson(Map<String, dynamic> json) {
 		{{range .Fields}}
-		{{.Name | toCamel}} = json["{{.Name | toSnack}}"]{{fromJson .Type (.Name | toCamel)}};
+		{{.Name | toCamel}} = json["{{.JSON}}"]{{fromJson .Type .JSON}};
 		{{end}}
 	}
 }

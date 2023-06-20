@@ -5,12 +5,20 @@ import (
 
 	"github.com/tinkler/mqttadmin/pkg/gs"
 	"github.com/tinkler/mqttadmin/pkg/logger"
+	"github.com/tinkler/mqttadmin/pkg/model/user"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type PageRow struct {
-	RowNo int
+	RowNo    int
+	Chapters map[string]Chapter
+	Option   map[string]interface{}
+}
+
+type Chapter struct {
+	Index int
+	Name  string
 }
 
 // @stream(bidi)
@@ -35,4 +43,8 @@ func (m *PageRow) GenRow(stream gs.NullStream) error {
 			return err
 		}
 	}
+}
+
+func (m *PageRow) GenUser(stream gs.Stream[*user.User]) error {
+	return nil
 }

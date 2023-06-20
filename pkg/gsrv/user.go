@@ -20,6 +20,19 @@ func NewUserGsrv() *userGsrv {
 }
 
 
+func (u *userGsrv) UserProfileSave(ctx context.Context, in *anypb.Any) (out *anypb.Any, err error) {
+	gm := mrz.ToTypedModel[*pb_user_v1.UserProfile, *structpb.Struct](in)
+	m := mrz.GetData[*user.UserProfile](gm)
+	res := mrz.NewTypedRes[*pb_user_v1.UserProfile, *structpb.Value]()
+	err = m.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	mrz.SetResData(res, m)
+	mrz.SetResRespNil(res)
+	return res.ToAny(), nil
+}
+
 func (u *userGsrv) AuthSignin(ctx context.Context, in *anypb.Any) (out *anypb.Any, err error) {
 	gm := mrz.ToTypedModel[*pb_user_v1.Auth, *structpb.Struct](in)
 	m := mrz.GetData[*user.Auth](gm)
@@ -58,19 +71,6 @@ func (u *userGsrv) AuthSignup(ctx context.Context, in *anypb.Any) (out *anypb.An
 	}
 	mrz.SetResData(res, m)
 	mrz.SetResResp(res, resData)
-	return res.ToAny(), nil
-}
-
-func (u *userGsrv) UserProfileSave(ctx context.Context, in *anypb.Any) (out *anypb.Any, err error) {
-	gm := mrz.ToTypedModel[*pb_user_v1.UserProfile, *structpb.Struct](in)
-	m := mrz.GetData[*user.UserProfile](gm)
-	res := mrz.NewTypedRes[*pb_user_v1.UserProfile, *structpb.Value]()
-	err = m.Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	mrz.SetResData(res, m)
-	mrz.SetResRespNil(res)
 	return res.ToAny(), nil
 }
 

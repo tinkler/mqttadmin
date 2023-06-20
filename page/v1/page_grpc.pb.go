@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type PageGsrvClient interface {
 	PageFetchUser(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	PageRowGenRow(ctx context.Context, opts ...grpc.CallOption) (PageGsrv_PageRowGenRowClient, error)
+	PageRowGenUser(ctx context.Context, opts ...grpc.CallOption) (PageGsrv_PageRowGenUserClient, error)
 }
 
 type pageGsrvClient struct {
@@ -75,12 +76,44 @@ func (x *pageGsrvPageRowGenRowClient) Recv() (*anypb.Any, error) {
 	return m, nil
 }
 
+func (c *pageGsrvClient) PageRowGenUser(ctx context.Context, opts ...grpc.CallOption) (PageGsrv_PageRowGenUserClient, error) {
+	stream, err := c.cc.NewStream(ctx, &PageGsrv_ServiceDesc.Streams[1], "/page.v1.PageGsrv/PageRowGenUser", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &pageGsrvPageRowGenUserClient{stream}
+	return x, nil
+}
+
+type PageGsrv_PageRowGenUserClient interface {
+	Send(*anypb.Any) error
+	Recv() (*anypb.Any, error)
+	grpc.ClientStream
+}
+
+type pageGsrvPageRowGenUserClient struct {
+	grpc.ClientStream
+}
+
+func (x *pageGsrvPageRowGenUserClient) Send(m *anypb.Any) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *pageGsrvPageRowGenUserClient) Recv() (*anypb.Any, error) {
+	m := new(anypb.Any)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PageGsrvServer is the server API for PageGsrv service.
 // All implementations must embed UnimplementedPageGsrvServer
 // for forward compatibility
 type PageGsrvServer interface {
 	PageFetchUser(context.Context, *anypb.Any) (*anypb.Any, error)
 	PageRowGenRow(PageGsrv_PageRowGenRowServer) error
+	PageRowGenUser(PageGsrv_PageRowGenUserServer) error
 	mustEmbedUnimplementedPageGsrvServer()
 }
 
@@ -93,6 +126,9 @@ func (UnimplementedPageGsrvServer) PageFetchUser(context.Context, *anypb.Any) (*
 }
 func (UnimplementedPageGsrvServer) PageRowGenRow(PageGsrv_PageRowGenRowServer) error {
 	return status.Errorf(codes.Unimplemented, "method PageRowGenRow not implemented")
+}
+func (UnimplementedPageGsrvServer) PageRowGenUser(PageGsrv_PageRowGenUserServer) error {
+	return status.Errorf(codes.Unimplemented, "method PageRowGenUser not implemented")
 }
 func (UnimplementedPageGsrvServer) mustEmbedUnimplementedPageGsrvServer() {}
 
@@ -151,6 +187,32 @@ func (x *pageGsrvPageRowGenRowServer) Recv() (*anypb.Any, error) {
 	return m, nil
 }
 
+func _PageGsrv_PageRowGenUser_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(PageGsrvServer).PageRowGenUser(&pageGsrvPageRowGenUserServer{stream})
+}
+
+type PageGsrv_PageRowGenUserServer interface {
+	Send(*anypb.Any) error
+	Recv() (*anypb.Any, error)
+	grpc.ServerStream
+}
+
+type pageGsrvPageRowGenUserServer struct {
+	grpc.ServerStream
+}
+
+func (x *pageGsrvPageRowGenUserServer) Send(m *anypb.Any) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *pageGsrvPageRowGenUserServer) Recv() (*anypb.Any, error) {
+	m := new(anypb.Any)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PageGsrv_ServiceDesc is the grpc.ServiceDesc for PageGsrv service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -167,6 +229,12 @@ var PageGsrv_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "PageRowGenRow",
 			Handler:       _PageGsrv_PageRowGenRow_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "PageRowGenUser",
+			Handler:       _PageGsrv_PageRowGenUser_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

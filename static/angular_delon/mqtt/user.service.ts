@@ -2,7 +2,7 @@
 import { Role } from './role.model';
 
 import { Injectable } from '@angular/core';
-import { Auth, UserProfile, User, UserRole,  } from './user.model';
+import { UserProfile, Auth, User, UserRole,  } from './user.model';
 import { RoleService  } from './role.service';
 
 import { _HttpClient } from '@delon/theme';
@@ -19,11 +19,11 @@ export class UserService {
 		) { }
 
 	
-	newAuth(): Auth {
-		return new Auth(this.http);
-	}
 	newUserProfile(): UserProfile {
 		return new UserProfile(this.http);
+	}
+	newAuth(): Auth {
+		return new Auth(this.http);
 	}
 	/**
 	* User is the user model

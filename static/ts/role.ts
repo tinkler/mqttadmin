@@ -3,12 +3,12 @@
 
 export interface Role {
 	
-	id: number;
+	id: string;
 	
 	name: string;
 	
 	
-	saveRole(): Promise<void>;
+	save(): Promise<void>;
 	
 }
 
@@ -18,14 +18,14 @@ export function Role(): Role {
 	
 	return {
 		
-		id: 0,
+		id: "",
 		
 		name: "",
 		
 		
-		saveRole(): Promise<void> {
+		save(): Promise<void> {
 			
-			return postRole(this, 'save-role', {  });
+			return postRole(this, 'save', {  });
 			
 		},
 		
@@ -38,7 +38,7 @@ export function Role(): Role {
 
 function postRole(role: Role, method: string, args: {}): Promise<any> {
 	const xhr = new XMLHttpRequest();
-	xhr.open("POST", `/role/role/${method}`, true);
+	xhr.open("POST", `/role//role/role/${method}`, true);
 	xhr.setRequestHeader("Content-Type", "application/json");
 	return new Promise((resolve, reject) => {
 		xhr.onload = () => {

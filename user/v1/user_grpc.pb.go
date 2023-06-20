@@ -23,10 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserGsrvClient interface {
+	UserProfileSave(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	AuthSignin(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	AuthQuickSignin(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	AuthSignup(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
-	UserProfileSave(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	UserSave(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	UserAddRole(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
 	UserRemoveRole(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error)
@@ -41,6 +41,15 @@ type userGsrvClient struct {
 
 func NewUserGsrvClient(cc grpc.ClientConnInterface) UserGsrvClient {
 	return &userGsrvClient{cc}
+}
+
+func (c *userGsrvClient) UserProfileSave(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error) {
+	out := new(anypb.Any)
+	err := c.cc.Invoke(ctx, "/user.v1.UserGsrv/UserProfileSave", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *userGsrvClient) AuthSignin(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error) {
@@ -64,15 +73,6 @@ func (c *userGsrvClient) AuthQuickSignin(ctx context.Context, in *anypb.Any, opt
 func (c *userGsrvClient) AuthSignup(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error) {
 	out := new(anypb.Any)
 	err := c.cc.Invoke(ctx, "/user.v1.UserGsrv/AuthSignup", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userGsrvClient) UserProfileSave(ctx context.Context, in *anypb.Any, opts ...grpc.CallOption) (*anypb.Any, error) {
-	out := new(anypb.Any)
-	err := c.cc.Invoke(ctx, "/user.v1.UserGsrv/UserProfileSave", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,10 +137,10 @@ func (c *userGsrvClient) UserRoleSave(ctx context.Context, in *anypb.Any, opts .
 // All implementations must embed UnimplementedUserGsrvServer
 // for forward compatibility
 type UserGsrvServer interface {
+	UserProfileSave(context.Context, *anypb.Any) (*anypb.Any, error)
 	AuthSignin(context.Context, *anypb.Any) (*anypb.Any, error)
 	AuthQuickSignin(context.Context, *anypb.Any) (*anypb.Any, error)
 	AuthSignup(context.Context, *anypb.Any) (*anypb.Any, error)
-	UserProfileSave(context.Context, *anypb.Any) (*anypb.Any, error)
 	UserSave(context.Context, *anypb.Any) (*anypb.Any, error)
 	UserAddRole(context.Context, *anypb.Any) (*anypb.Any, error)
 	UserRemoveRole(context.Context, *anypb.Any) (*anypb.Any, error)
@@ -154,6 +154,9 @@ type UserGsrvServer interface {
 type UnimplementedUserGsrvServer struct {
 }
 
+func (UnimplementedUserGsrvServer) UserProfileSave(context.Context, *anypb.Any) (*anypb.Any, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserProfileSave not implemented")
+}
 func (UnimplementedUserGsrvServer) AuthSignin(context.Context, *anypb.Any) (*anypb.Any, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthSignin not implemented")
 }
@@ -162,9 +165,6 @@ func (UnimplementedUserGsrvServer) AuthQuickSignin(context.Context, *anypb.Any) 
 }
 func (UnimplementedUserGsrvServer) AuthSignup(context.Context, *anypb.Any) (*anypb.Any, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthSignup not implemented")
-}
-func (UnimplementedUserGsrvServer) UserProfileSave(context.Context, *anypb.Any) (*anypb.Any, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserProfileSave not implemented")
 }
 func (UnimplementedUserGsrvServer) UserSave(context.Context, *anypb.Any) (*anypb.Any, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserSave not implemented")
@@ -195,6 +195,24 @@ type UnsafeUserGsrvServer interface {
 
 func RegisterUserGsrvServer(s grpc.ServiceRegistrar, srv UserGsrvServer) {
 	s.RegisterService(&UserGsrv_ServiceDesc, srv)
+}
+
+func _UserGsrv_UserProfileSave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(anypb.Any)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGsrvServer).UserProfileSave(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.v1.UserGsrv/UserProfileSave",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGsrvServer).UserProfileSave(ctx, req.(*anypb.Any))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _UserGsrv_AuthSignin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -247,24 +265,6 @@ func _UserGsrv_AuthSignup_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserGsrvServer).AuthSignup(ctx, req.(*anypb.Any))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserGsrv_UserProfileSave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(anypb.Any)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserGsrvServer).UserProfileSave(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/user.v1.UserGsrv/UserProfileSave",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGsrvServer).UserProfileSave(ctx, req.(*anypb.Any))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -385,6 +385,10 @@ var UserGsrv_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UserGsrvServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "UserProfileSave",
+			Handler:    _UserGsrv_UserProfileSave_Handler,
+		},
+		{
 			MethodName: "AuthSignin",
 			Handler:    _UserGsrv_AuthSignin_Handler,
 		},
@@ -395,10 +399,6 @@ var UserGsrv_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AuthSignup",
 			Handler:    _UserGsrv_AuthSignup_Handler,
-		},
-		{
-			MethodName: "UserProfileSave",
-			Handler:    _UserGsrv_UserProfileSave_Handler,
 		},
 		{
 			MethodName: "UserSave",

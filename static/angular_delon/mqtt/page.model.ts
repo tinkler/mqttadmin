@@ -62,12 +62,44 @@ export interface PageRow {
 	
 	rowNo: number;
 	
+	chapters: ;
+	
+	option: ;
+	
 	
 }
 
 export class PageRow {
 	
 	rowNo: number = 0;
+	
+	chapters:  = ;
+	
+	option:  = ;
+	
+
+	constructor(
+		private http: _HttpClient,
+	){}
+
+	
+}
+
+
+export interface Chapter {
+	
+	index: number;
+	
+	name: string;
+	
+	
+}
+
+export class Chapter {
+	
+	index: number = 0;
+	
+	name: string = "";
 	
 
 	constructor(
