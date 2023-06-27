@@ -349,7 +349,6 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 			} else {
 				goType = buildinType
 			}
-
 			if isSlice {
 				goType = "repeated " + goType
 			}
@@ -374,7 +373,6 @@ func GenerateProtoFile(path string, moduleBasePath string, pkg *Package, dep map
 			case MT_BIDI:
 				protoFile.WriteString(fmt.Sprintf("\trpc %s%s (stream google.protobuf.Any) returns (stream google.protobuf.Any);\n", s.Name, m.Name))
 			}
-
 		}
 	}
 	protoFile.WriteString(fmt.Sprintln("}"))
@@ -498,22 +496,26 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 			return cjson.ToCamel(s)
 		},
 		"toType": func(goType string) string {
-			ptrPrefix := ""
+			prefix := ""
+			if strings.HasPrefix(goType, "[]") {
+				prefix = "[]"
+				goType = strings.TrimPrefix(goType, "[]")
+			}
 			if strings.HasPrefix(goType, "*") {
-				ptrPrefix = "*"
+				prefix += "*"
 				goType = strings.TrimPrefix(goType, "*")
 			}
 			if _, isBt := protoTypeMap[goType]; isBt {
-				return ptrPrefix + goType
+				return prefix + goType
 			}
 			if s := FindStruct(pkg, goType); s != nil {
-				return ptrPrefix + pkg.Name + "." + goType
+				return prefix + pkg.Name + "." + goType
 			}
 			if dep != nil {
 				if nameSlice := strings.Split(goType, "."); len(nameSlice) > 1 {
 					if pkg, isDep := dep[nameSlice[0]]; isDep {
 						if s := FindStruct(pkg, nameSlice[1]); s != nil {
-							return ptrPrefix + pkg.Name + "." + s.Name
+							return prefix + pkg.Name + "." + s.Name
 						}
 					}
 				}
@@ -550,22 +552,26 @@ func GenerateGsrv(path string, modulePath string, pkg *Package, dep map[string]*
 			return goType
 		},
 		"toPbType": func(goType string) string {
-			ptrPrefix := ""
+			prefix := ""
+			if strings.HasPrefix(goType, "[]") {
+				prefix = "[]"
+				goType = strings.TrimPrefix(goType, "[]")
+			}
 			if strings.HasPrefix(goType, "*") {
-				ptrPrefix = "*"
+				prefix += "*"
 				goType = strings.TrimPrefix(goType, "*")
 			}
 			if _, isBt := protoTypeMap[goType]; isBt {
-				return ptrPrefix + goType
+				return prefix + goType
 			}
 			if s := FindStruct(pkg, goType); s != nil {
-				return ptrPrefix + "pb_" + pkg.Name + "_v1." + goType
+				return prefix + "pb_" + pkg.Name + "_v1." + goType
 			}
 			if dep != nil {
 				if nameSlice := strings.Split(goType, "."); len(nameSlice) > 1 {
 					if pkg, isDep := dep[nameSlice[0]]; isDep {
 						if s := FindStruct(pkg, nameSlice[1]); s != nil {
-							return ptrPrefix + "pb_" + pkg.Name + "_v1." + s.Name
+							return prefix + "pb_" + pkg.Name + "_v1." + s.Name
 						}
 					}
 				}
